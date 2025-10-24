@@ -37,6 +37,8 @@ else
     # Wenn es existiert, wechsle in das Verzeichnis und hole die neuesten Änderungen.
     echo "Aktualisiere das lokale Repository..."
     cd "$REPO_DIR"
+    # Setzt den lokalen Branch zurück, falls er durch den fehlerhaften rsync beschädigt wurde
+    git reset --hard origin/main || git reset --hard origin/master
     git pull
     cd ..
 fi
@@ -44,10 +46,11 @@ fi
 # --- SCHRITT 2: Dateien synchronisieren ---
 echo "Synchronisiere den Inhalt von '$SOURCE_DIR' nach '$REPO_DIR'..."
 # rsync ist ein leistungsstarkes Werkzeug zum Synchronisieren von Ordnern.
+# --exclude='.git': Dieser neue Teil ist die KORREKTUR. Er verhindert, dass der .git-Ordner im Ziel gelöscht wird.
 # --delete: Löscht Dateien im Ziel, die in der Quelle nicht mehr existieren.
 # -av: Archivmodus (behält Berechtigungen, etc.) und ausführliche Ausgabe.
 # Der Schrägstrich am Ende von SOURCE_DIR ist wichtig, er kopiert den *Inhalt*.
-rsync -av --delete "$SOURCE_DIR/" "$REPO_DIR/"
+rsync -av --delete --exclude='.git' "$SOURCE_DIR/" "$REPO_DIR/"
 
 # --- SCHRITT 3: Änderungen hochladen ---
 # Wechsle in das Verzeichnis des Repositorys.
