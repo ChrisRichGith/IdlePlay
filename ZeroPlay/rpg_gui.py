@@ -13,6 +13,7 @@ from trader import Trader
 from trader_gui import TraderWindow
 from save_load_system import save_game
 from utils import format_currency, center_window
+from game_over_gui import GameOverWindow
 
 # Liste verfügbarer Quests
 AVAILABLE_QUESTS = [
@@ -392,9 +393,22 @@ class RpgGui(ttk.Frame):
 
     def handle_game_over(self):
         self.game_over = True
-        messagebox.showerror("Game Over", f"Du bist auf Level {self.player.level} gestorben. Ein neuer Held wird rekrutiert.")
-        if self.callbacks['game_over']:
-            self.callbacks['game_over']()
+        try:
+            img = Image.open("assets/grabstein.png")
+            img.thumbnail((220, 280))
+            photo_img = ImageTk.PhotoImage(img)
+
+            self.portrait_label.config(image=photo_img)
+            self.portrait_label.image = photo_img
+        except FileNotFoundError:
+            self.portrait_label.config(text="Game Over\n(Grabstein nicht gefunden)")
+
+        # Disable all action buttons
+        for button in [self.quest_button, self.auto_quest_button, self.trader_button, self.equip_button, self.use_button]:
+            button.config(state=tk.DISABLED)
+
+        # Show the custom game over window
+        GameOverWindow(self, self.player, on_close_callback=self.callbacks['game_over'])
 
 class Tooltip:
     """
