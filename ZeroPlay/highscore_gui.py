@@ -31,26 +31,20 @@ class HighscoreWindow(tk.Toplevel):
         container.rowconfigure(0, weight=1)
 
         # Define the columns for the Treeview
-        columns = ("name", "klasse", "level", "copper", "best_weapon", "best_head", "best_chest")
+        columns = ("name", "level", "best_equipment", "copper")
         self.tree = ttk.Treeview(container, columns=columns, show="headings")
 
         # Define headings
         self.tree.heading("name", text="Name")
-        self.tree.heading("klasse", text="Klasse")
         self.tree.heading("level", text="Level")
+        self.tree.heading("best_equipment", text="Beste Ausrüstung")
         self.tree.heading("copper", text="Gold")
-        self.tree.heading("best_weapon", text="Beste Waffe")
-        self.tree.heading("best_head", text="Bester Helm")
-        self.tree.heading("best_chest", text="Beste Rüstung")
 
         # Configure column widths
         self.tree.column("name", width=120)
-        self.tree.column("klasse", width=80)
         self.tree.column("level", width=50, anchor="center")
+        self.tree.column("best_equipment", width=300)
         self.tree.column("copper", width=100, anchor="e")
-        self.tree.column("best_weapon", width=150)
-        self.tree.column("best_head", width=150)
-        self.tree.column("best_chest", width=150)
 
         self.tree.grid(row=0, column=0, sticky="nsew")
 
@@ -68,12 +62,14 @@ class HighscoreWindow(tk.Toplevel):
         scores = load_highscores()
         for score in scores:
             copper_formatted = format_currency(score.get("copper", 0))
+            best_equipment = (
+                f"Waffe: {score.get('best_weapon', 'N/A')}, "
+                f"Kopf: {score.get('best_head', 'N/A')}, "
+                f"Brust: {score.get('best_chest', 'N/A')}"
+            )
             self.tree.insert("", tk.END, values=(
                 score.get("name", ""),
-                score.get("klasse", ""),
                 score.get("level", 0),
-                copper_formatted,
-                score.get("best_weapon", ""),
-                score.get("best_head", ""),
-                score.get("best_chest", "")
+                best_equipment,
+                copper_formatted
             ))
