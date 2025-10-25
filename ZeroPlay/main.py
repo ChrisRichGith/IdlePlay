@@ -10,6 +10,7 @@ from class_selection_frame import ClassSelectionFrame
 from rpg_gui import RpgGui
 from save_load_system import save_game, load_game, get_save_files, SAVE_DIR
 from utils import center_window
+from highscore_gui import HighscoreWindow
 import os
 
 class Game:
@@ -43,9 +44,13 @@ class Game:
         callbacks = {
             'load': self.load_and_show_game,
             'new': self.show_character_creation,
-            'quit': self.quit_game
+            'quit': self.quit_game,
+            'highscores': self.show_highscores
         }
         self.switch_frame(StartMenu, callbacks=callbacks)
+
+    def show_highscores(self):
+        HighscoreWindow(self.root)
 
     def show_character_creation(self):
         callbacks = {

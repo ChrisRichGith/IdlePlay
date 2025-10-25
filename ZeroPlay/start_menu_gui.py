@@ -85,6 +85,9 @@ class StartMenu(ttk.Frame):
         new_game_button = ttk.Button(button_frame, text="Neues Spiel", command=self.callbacks['new'])
         new_game_button.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=2)
 
+        highscore_button = ttk.Button(button_frame, text="Highscores", command=self.callbacks.get('highscores', lambda: None))
+        highscore_button.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=2)
+
         quit_button = ttk.Button(button_frame, text="Beenden", command=self.callbacks['quit'])
         quit_button.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=2)
 
