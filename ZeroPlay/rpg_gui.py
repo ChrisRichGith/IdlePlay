@@ -17,18 +17,62 @@ from game_over_gui import GameOverWindow
 
 # Liste verfügbarer Quests
 AVAILABLE_QUESTS = [
-    "Rette eine Prinzessin aus einem anderen Schloss",
-    "Sammle 10 leere Flaschen für den Alchemisten",
-    "Poliere die Rüstung des Königs (ohne Bezahlung)",
-    "Entwirre die Kopfhörer des Barden",
-    "Finde das Rezept für ewige Jugend (und verliere es wieder)",
-    "Bringe dem königlichen Papagei das Fluchen bei",
-    "Zähle alle Sandkörner am Strand",
-    "Sortiere die Bibliothek nach der Farbe der Buchrücken",
-    "Überzeuge einen Drachen, dass er nur ein überdimensionierter Wellensittich ist",
-    "Finde heraus, warum Goblins immer so schlechte Laune haben",
-    "Eskortiere eine sehr langsame Schildkröte über eine sehr breite Straße",
-    "Störe eine wichtige Zeremonie durch lautes Kauen"
+    {
+        "name": "Töte alle Schleime",
+        "image": "assets/quests/kill_all_slimes.png"
+    },
+    {
+        "name": "Bringe dem Schmied 5 Eisenerz",
+        "image": "assets/quests/bring_5_iron_ore_to_the_blacksmith.jpg"
+    },
+    {
+        "name": "Rette eine Prinzessin aus einem anderen Schloss",
+        "image": "assets/quests/save_a_princess_from_another_castle.jpg"
+    },
+    {
+        "name": "Sammle 10 leere Flaschen für den Alchemisten",
+        "image": "assets/quests/collect_10_empty_bottles_for_the_alchemist.jpg"
+    },
+    {
+        "name": "Poliere die Rüstung des Königs (ohne Bezahlung)",
+        "image": "assets/quests/polish_the_king's_armor_(unpaid).jpg"
+    },
+    {
+        "name": "Entwirre die Kopfhörer des Barden",
+        "image": "assets/quests/untangle_the_bard's_headphones.jpg"
+    },
+    {
+        "name": "Finde das Rezept für ewige Jugend (und verliere es wieder)",
+        "image": "assets/quests/find_the_recipe_for_eternal_youth_(and_lose_it_again).jpg"
+    },
+    {
+        "name": "Bringe dem königlichen Papagei das Fluchen bei",
+        "image": "assets/quests/teach_the_royal_parrot_to_curse.jpg"
+    },
+    {
+        "name": "Zähle alle Sandkörner am Strand",
+        "image": "assets/quests/count_all_the_grains_of_sand_on_the_beach.jpg"
+    },
+    {
+        "name": "Sortiere die Bibliothek nach der Farbe der Buchrücken",
+        "image": "assets/quests/sort_the_library_by_the_color_of_the_book_spines.jpg"
+    },
+    {
+        "name": "Überzeuge einen Drachen, dass er nur ein überdimensionierter Wellensittich ist",
+        "image": "assets/quests/convince_a_dragon_he's_just_an_oversized_budgie.jpg"
+    },
+    {
+        "name": "Finde heraus, warum Goblins immer so schlechte Laune haben",
+        "image": "assets/quests/find_out_why_goblins_are_always_in_a_bad_mood.jpg"
+    },
+    {
+        "name": "Eskortiere eine sehr langsame Schildkröte über eine sehr breite Straße",
+        "image": "assets/quests/escort_a_very_slow_turtle_across_a_very_wide_road.jpg"
+    },
+    {
+        "name": "Störe eine wichtige Zeremonie durch lautes Kauen",
+        "image": "assets/quests/disrupt_an_important_ceremony_by_chewing_loudly.jpg"
+    }
 ]
 
 class RpgGui(ttk.Frame):
@@ -149,6 +193,9 @@ class RpgGui(ttk.Frame):
     def _create_actions_frame(self, parent):
         actions_frame = ttk.LabelFrame(parent, text="Aktionen", padding="10")
         actions_frame.pack(fill=tk.Y, expand=False, anchor='n')
+
+        self.quest_image_label = ttk.Label(actions_frame)
+        self.quest_image_label.pack(pady=10)
 
         self.quest_button = ttk.Button(actions_frame, text="Neue Quest beginnen", command=self.start_quest)
         self.quest_button.pack(fill=tk.X, pady=5)
@@ -289,9 +336,23 @@ class RpgGui(ttk.Frame):
             if self.is_auto_questing:
                 self.toggle_auto_quest()
             return
-        quest_desc = random.choice(AVAILABLE_QUESTS)
-        self.current_quest = Quest(quest_desc)
-        self.add_to_log(f"Neue Quest: {quest_desc}")
+
+        selected_quest = random.choice(AVAILABLE_QUESTS)
+        quest_name = selected_quest["name"]
+        quest_image_path = selected_quest["image"]
+
+        try:
+            img = Image.open(quest_image_path)
+            img.thumbnail((150, 100))
+            photo_img = ImageTk.PhotoImage(img)
+            self.quest_image_label.config(image=photo_img)
+            self.quest_image_label.image = photo_img
+        except Exception as e:
+            self.quest_image_label.config(image=None, text=f"Bildfehler:\n{e}")
+            self.quest_image_label.image = None
+
+        self.current_quest = Quest(quest_name)
+        self.add_to_log(f"Neue Quest: {quest_name}")
         self.progress_bar['value'] = 0
         self.update_display()
         self.advance_quest()
@@ -323,6 +384,11 @@ class RpgGui(ttk.Frame):
                 CountdownDialog(self, title="Level Aufstieg!", message=level_up_summary)
             self.current_quest = None
             self.progress_bar['value'] = 0
+
+            # Bild nach Quest-Abschluss entfernen
+            self.quest_image_label.config(image='')
+            self.quest_image_label.image = None
+
             if self.is_auto_questing:
                 self.master.after(1000, self.start_quest)
         else:
