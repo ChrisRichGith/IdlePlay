@@ -5,6 +5,7 @@ Defines the GUI Frame for the main start menu.
 import tkinter as tk
 from tkinter import ttk
 from save_load_system import get_save_files
+from utils import format_currency
 
 from save_load_system import get_save_files, load_game
 
@@ -113,7 +114,7 @@ class StartMenu(ttk.Frame):
         if char:
             self.preview_name_var.set(f"Name: {char.name} ({char.klasse})")
             self.preview_level_var.set(f"Level: {char.level}")
-            self.preview_gold_var.set(f"Gold: {char.copper}")
+            self.preview_gold_var.set(f"Gold: {format_currency(char.copper)}")
             for stat, var in self.preview_stats_vars.items():
                 var.set(f"{stat}: {char.attributes.get(stat, 0)}")
         else:
