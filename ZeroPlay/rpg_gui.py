@@ -343,7 +343,7 @@ class RpgGui(ttk.Frame):
 
         try:
             img = Image.open(quest_image_path)
-            img.thumbnail((225, 150))
+            img.thumbnail((300, 200))
             photo_img = ImageTk.PhotoImage(img)
             self.quest_image_label.config(image=photo_img)
             self.quest_image_label.image = photo_img
