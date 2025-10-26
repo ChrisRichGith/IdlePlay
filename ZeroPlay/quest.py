@@ -21,7 +21,7 @@ QUEST_EVENTS = [
 class Quest:
     """Represents a quest that automatically progresses and grants rewards."""
 
-    def __init__(self, description, duration=10):
+    def __init__(self, description, duration=40):
         """
         Initializes a new quest.
 
