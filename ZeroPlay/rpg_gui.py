@@ -19,7 +19,7 @@ from game_over_gui import GameOverWindow
 AVAILABLE_QUESTS = [
     {
         "name": "Töte alle Schleime",
-        "image": "assets/quests/kill_all_slimes.png"
+        "image": "assets/quests/kill_all_slimes.jpg"
     },
     {
         "name": "Bringe dem Schmied 5 Eisenerz",
@@ -343,7 +343,7 @@ class RpgGui(ttk.Frame):
 
         try:
             img = Image.open(quest_image_path)
-            img.thumbnail((150, 100))
+            img.thumbnail((225, 150))
             photo_img = ImageTk.PhotoImage(img)
             self.quest_image_label.config(image=photo_img)
             self.quest_image_label.image = photo_img
