@@ -194,9 +194,6 @@ class RpgGui(ttk.Frame):
         actions_frame = ttk.LabelFrame(parent, text="Aktionen", padding="10")
         actions_frame.pack(fill=tk.Y, expand=False, anchor='n')
 
-        self.quest_image_label = ttk.Label(actions_frame)
-        self.quest_image_label.pack(pady=10)
-
         self.quest_button = ttk.Button(actions_frame, text="Neue Quest beginnen", command=self.start_quest)
         self.quest_button.pack(fill=tk.X, pady=5)
         self.auto_quest_button = ttk.Button(actions_frame, text="Auto-Quest starten", command=self.toggle_auto_quest)
@@ -213,6 +210,9 @@ class RpgGui(ttk.Frame):
         self.loot_status_text = tk.Text(actions_frame, height=2, wrap=tk.WORD, bg="lightgrey", relief="flat", fg="gray")
         self.loot_status_text.pack(fill=tk.X, pady=5)
         self.loot_status_text.config(state=tk.DISABLED)
+
+        self.quest_image_label = ttk.Label(actions_frame)
+        self.quest_image_label.pack(pady=10)
 
     def _create_log_frame(self, parent):
         """Creates the quest log text widget."""
