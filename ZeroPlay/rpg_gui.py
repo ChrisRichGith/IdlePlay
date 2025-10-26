@@ -19,7 +19,7 @@ from game_over_gui import GameOverWindow
 AVAILABLE_QUESTS = [
     {
         "name": "Töte alle Schleime",
-        "image": "assets/quests/kill_all_slimes.png"
+        "image": "assets/quests/kill_all_slimes.jpg"
     },
     {
         "name": "Bringe dem Schmied 5 Eisenerz",
