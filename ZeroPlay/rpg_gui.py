@@ -5,6 +5,7 @@ Defines the main game GUI frame.
 import tkinter as tk
 from tkinter import ttk, simpledialog, messagebox
 import random
+import time
 from PIL import Image, ImageTk
 
 from character import Character
@@ -89,6 +90,11 @@ class RpgGui(ttk.Frame):
         self.is_auto_questing = False
         self.game_over = False
 
+        # Minigame state
+        self.minigame_orbs = {}
+        self.last_orb_spawn_time = 0
+        self.next_orb_spawn_delay = random.uniform(2, 5)
+
         self._setup_string_vars()
         self.create_widgets()
         self.update_display()
@@ -163,9 +169,16 @@ class RpgGui(ttk.Frame):
             ttk.Label(attr_frame, text=f"{stat}:").grid(row=i, column=0, sticky="w")
             ttk.Label(attr_frame, textvariable=var).grid(row=i, column=1, sticky="w", padx=5)
 
+        # Resources Display
+        resources_frame = ttk.LabelFrame(char_frame, text="Ressourcen", padding="5")
+        resources_frame.grid(row=4, column=0, columnspan=2, sticky="ew", pady=(10, 0))
+        self.resources_label = ttk.Label(resources_frame, text="Noch keine Ressourcen gesammelt.")
+        self.resources_label.pack(fill=tk.X, expand=True)
+
+
         for i, (text, var_name) in enumerate([("Lebenspunkte", "lp"), ("Manapunkte", "mp"), ("Erfahrung", "xp")]):
             frame = ttk.LabelFrame(char_frame, text=text, padding=5)
-            frame.grid(row=4+i, column=0, columnspan=2, sticky="ew", pady=(5, 0))
+            frame.grid(row=5+i, column=0, columnspan=2, sticky="ew", pady=(5, 0))
             bar = ttk.Progressbar(frame, orient='horizontal', mode='determinate')
             bar.pack(fill=tk.X, expand=True)
             label_var = getattr(self, f"{var_name}_label_var")
@@ -213,6 +226,13 @@ class RpgGui(ttk.Frame):
 
         self.quest_image_label = ttk.Label(actions_frame)
         self.quest_image_label.pack(pady=10)
+
+        # Minigame Canvas
+        minigame_frame = ttk.LabelFrame(actions_frame, text="Ressourcenjagd", padding="5")
+        minigame_frame.pack(fill=tk.X, pady=(10, 0), expand=True)
+        self.minigame_canvas = tk.Canvas(minigame_frame, width=120, height=150, bg="grey", relief="sunken", borderwidth=1)
+        self.minigame_canvas.pack(expand=True, fill=tk.BOTH)
+
 
     def _create_log_frame(self, parent):
         """Creates the quest log text widget."""
@@ -300,6 +320,14 @@ class RpgGui(ttk.Frame):
         self.mp_bar['value'] = (self.player.current_mp / self.player.max_mp) * 100 if self.player.max_mp > 0 else 0
         self.xp_label_var.set(f"{self.player.xp} / {self.player.xp_to_next_level} XP")
         self.xp_bar['value'] = (self.player.xp / self.player.xp_to_next_level) * 100 if self.player.xp_to_next_level > 0 else 0
+
+        # Update resources display
+        if not self.player.resources:
+            self.resources_label.config(text="Noch keine Ressourcen gesammelt.")
+        else:
+            resources_text = "\n".join([f"{name}: {amount}" for name, amount in self.player.resources.items()])
+            self.resources_label.config(text=resources_text)
+
         self.update_button_states()
         self.update_idletasks()
 
@@ -357,8 +385,58 @@ class RpgGui(ttk.Frame):
         self.update_display()
         self.advance_quest()
 
+    def update_minigame(self):
+        if self.current_quest is None: return
+
+        now = time.time()
+        # Remove old orbs
+        orbs_to_remove = []
+        for orb_id, orb_data in self.minigame_orbs.items():
+            if now - orb_data['spawn_time'] > orb_data['lifespan']:
+                self.minigame_canvas.delete(orb_id)
+                orbs_to_remove.append(orb_id)
+        for orb_id in orbs_to_remove:
+            del self.minigame_orbs[orb_id]
+
+        # Spawn new orbs
+        if now - self.last_orb_spawn_time > self.next_orb_spawn_delay:
+            canvas_width = self.minigame_canvas.winfo_width()
+            canvas_height = self.minigame_canvas.winfo_height()
+
+            if canvas_width > 1 and canvas_height > 1: # Ensure canvas is rendered
+                x = random.randint(10, canvas_width - 10)
+                y = random.randint(10, canvas_height - 10)
+
+                # 80% chance for Iron Ore, 20% for Jewel
+                resource_type = "Eisenerz" if random.random() < 0.8 else "Juwel"
+                color = "grey" if resource_type == "Eisenerz" else "cyan"
+
+                orb_id = self.minigame_canvas.create_oval(x-10, y-10, x+10, y+10, fill=color, outline="black")
+
+                # Bind click event
+                self.minigame_canvas.tag_bind(orb_id, "<Button-1>", lambda event, o_id=orb_id: self.on_orb_click(o_id))
+
+                self.minigame_orbs[orb_id] = {
+                    'spawn_time': now,
+                    'lifespan': random.uniform(2, 3),
+                    'resource': resource_type
+                }
+                self.last_orb_spawn_time = now
+                self.next_orb_spawn_delay = random.uniform(2, 5)
+
+    def on_orb_click(self, orb_id):
+        if orb_id in self.minigame_orbs:
+            resource = self.minigame_orbs[orb_id]['resource']
+            self.player.add_resource(resource, 1)
+            self.minigame_canvas.delete(orb_id)
+            del self.minigame_orbs[orb_id]
+            self.update_display()
+
     def advance_quest(self):
         if self.current_quest is None: return
+
+        self.update_minigame() # Update the minigame on each tick
+
         event_message = self.current_quest.advance(self.player)
         # Only log the final message when the quest is complete
         if event_message and self.current_quest.is_complete():
