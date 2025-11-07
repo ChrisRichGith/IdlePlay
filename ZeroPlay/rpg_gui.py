@@ -224,8 +224,12 @@ class RpgGui(ttk.Frame):
         self.loot_status_text.pack(fill=tk.X, pady=5)
         self.loot_status_text.config(state=tk.DISABLED)
 
-        self.quest_image_label = ttk.Label(actions_frame)
+        # Create a placeholder for the quest image to stabilize the layout
+        self.placeholder_image = ImageTk.PhotoImage(Image.new('RGBA', (300, 200), (0, 0, 0, 0)))
+        self.quest_image_label = ttk.Label(actions_frame, image=self.placeholder_image)
+        self.quest_image_label.image = self.placeholder_image # Keep a reference
         self.quest_image_label.pack(pady=10)
+
 
         # Minigame Canvas
         minigame_frame = ttk.LabelFrame(actions_frame, text="Ressourcenjagd", padding="5")
@@ -463,9 +467,9 @@ class RpgGui(ttk.Frame):
             self.current_quest = None
             self.progress_bar['value'] = 0
 
-            # Bild nach Quest-Abschluss entfernen
-            self.quest_image_label.config(image='')
-            self.quest_image_label.image = None
+            # Bild nach Quest-Abschluss auf Platzhalter zurücksetzen
+            self.quest_image_label.config(image=self.placeholder_image)
+            self.quest_image_label.image = self.placeholder_image
 
             if self.is_auto_questing:
                 self.master.after(1000, self.start_quest)
