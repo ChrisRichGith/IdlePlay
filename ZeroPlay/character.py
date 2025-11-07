@@ -30,6 +30,7 @@ class Character:
         self.inventory = []
         self.max_inventory_size = 10
         self.equipment = {'Kopf': None, 'Brust': None, 'Waffe': None}
+        self.resources = {}
 
         # Derived stats
         self.max_lp = 0
@@ -125,6 +126,13 @@ class Character:
             else:
                 return False
         return True
+
+    def add_resource(self, resource_name, amount):
+        """Adds a specified amount of a resource to the character."""
+        if resource_name in self.resources:
+            self.resources[resource_name] += amount
+        else:
+            self.resources[resource_name] = amount
 
     def is_upgrade(self, item_from_inventory):
         """
