@@ -9,7 +9,6 @@ from start_menu_gui import StartMenu
 from class_selection_frame import ClassSelectionFrame
 from rpg_gui import RpgGui
 from save_load_system import save_game, load_game, get_save_files, SAVE_DIR
-from utils import center_window
 from highscore_gui import HighscoreWindow
 import os
 
@@ -18,8 +17,7 @@ class Game:
     def __init__(self, root):
         self.root = root
         self.root.title("Chronicle of the Idle Hero")
-        self.root.geometry("1280x800")
-        center_window(self.root)
+        self.root.state('zoomed') # Start in maximized window mode
 
         # Apply a modern theme
         style = ttk.Style(self.root)
