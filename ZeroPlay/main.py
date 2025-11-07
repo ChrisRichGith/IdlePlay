@@ -17,7 +17,7 @@ class Game:
     def __init__(self, root):
         self.root = root
         self.root.title("Chronicle of the Idle Hero")
-        self.root.state('zoomed') # Start in maximized window mode
+        self.root.attributes('-zoomed', True) # Alternative for maximizing on Linux
 
         # Apply a modern theme
         style = ttk.Style(self.root)
