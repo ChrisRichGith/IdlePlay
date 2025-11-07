@@ -39,7 +39,11 @@ def load_game(character_name):
     if os.path.exists(filename):
         try:
             with open(filename, 'rb') as f:
-                return pickle.load(f)
+                character = pickle.load(f)
+                # Compatibility check for old saves
+                if not hasattr(character, 'resources'):
+                    character.resources = {}
+                return character
         except Exception as e:
             print(f"Fehler beim Laden von {character_name}: {e}")
             return None
