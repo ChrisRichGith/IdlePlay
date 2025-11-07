@@ -12,6 +12,7 @@ from character import Character
 from quest import Quest
 from trader import Trader
 from trader_gui import TraderWindow
+from blacksmith_gui import BlacksmithWindow
 from save_load_system import save_game
 from utils import format_currency, center_window
 from game_over_gui import GameOverWindow
@@ -213,6 +214,8 @@ class RpgGui(ttk.Frame):
         self.auto_quest_button.pack(fill=tk.X, pady=5)
         self.trader_button = ttk.Button(actions_frame, text="Händler besuchen", command=self.open_trader_window)
         self.trader_button.pack(fill=tk.X, pady=5)
+        self.blacksmith_button = ttk.Button(actions_frame, text="Schmied besuchen", command=self.open_blacksmith_window)
+        self.blacksmith_button.pack(fill=tk.X, pady=5)
         self.equip_button = ttk.Button(actions_frame, text="Gegenstand ausrüsten", command=self.equip_item)
         self.equip_button.pack(fill=tk.X, pady=5)
         self.use_button = ttk.Button(actions_frame, text="Gegenstand benutzen", command=self.use_item)
@@ -514,6 +517,7 @@ class RpgGui(ttk.Frame):
         selected_indices = self.inventory_listbox.curselection()
         self.quest_button.config(state=tk.DISABLED if is_questing else tk.NORMAL)
         self.trader_button.config(state=tk.DISABLED if is_questing else tk.NORMAL)
+        self.blacksmith_button.config(state=tk.DISABLED if is_questing else tk.NORMAL)
         self.auto_quest_button.config(state=tk.DISABLED if is_questing and not self.is_auto_questing else tk.NORMAL)
         if not selected_indices:
             self.equip_button.config(state=tk.DISABLED)
@@ -538,6 +542,14 @@ class RpgGui(ttk.Frame):
     def on_trader_close(self):
         self.update_display()
         self.trader_button.config(state=tk.NORMAL)
+
+    def open_blacksmith_window(self):
+        self.blacksmith_button.config(state=tk.DISABLED)
+        BlacksmithWindow(self, self.player, on_close_callback=self.on_blacksmith_close)
+
+    def on_blacksmith_close(self):
+        self.update_display()
+        self.blacksmith_button.config(state=tk.NORMAL)
 
     def handle_game_over(self):
         self.game_over = True

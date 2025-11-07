@@ -134,6 +134,17 @@ class Character:
         else:
             self.resources[resource_name] = amount
 
+    def remove_resources(self, cost):
+        """
+        Removes resources from the character's inventory based on a cost dictionary.
+        Assumes the check for affordability has already been made.
+        """
+        for resource, amount in cost.items():
+            if resource in self.resources:
+                self.resources[resource] -= amount
+                if self.resources[resource] <= 0:
+                    del self.resources[resource]
+
     def is_upgrade(self, item_from_inventory):
         """
         Checks if an item in the inventory is an upgrade over the equipped item.
