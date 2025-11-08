@@ -690,8 +690,8 @@ class CountdownDialog(tk.Toplevel):
         # Start the countdown
         self.update_countdown()
 
-        # Center the window after widgets are created
-        center_window(self)
+        # Center the window after a short delay to ensure dimensions are calculated
+        self.after(10, lambda: center_window(self))
 
     def update_countdown(self):
         if self.countdown > 0:

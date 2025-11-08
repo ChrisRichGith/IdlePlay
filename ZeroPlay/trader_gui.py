@@ -40,8 +40,8 @@ class TraderWindow:
         self.create_widgets()
         self.update_display()
 
-        # Center the window after all widgets are created and sized
-        center_window(self.window)
+        # Center the window after a short delay
+        self.window.after(10, lambda: center_window(self.window))
 
     def _setup_vars(self):
         """Sets up tkinter StringVars for the trader window."""
