@@ -39,6 +39,8 @@ class Character:
         self.current_mp = 0
         self.max_energie = 0
         self.current_energie = 0
+        self.max_wut = 0
+        self.current_wut = 0
         self.update_derived_stats(heal_on_update=True) # Initial calculation and full heal
 
     def update_derived_stats(self, heal_on_update=False):
@@ -57,15 +59,22 @@ class Character:
         else:
             self.max_energie = 0
 
+        if self.klasse == "Krieger":
+            self.max_wut = 30 + total_stats['Stärke'] * 3
+        else:
+            self.max_wut = 0
+
         # Keep current values unless they exceed the new max
         self.current_lp = min(self.current_lp, self.max_lp)
         self.current_mp = min(self.current_mp, self.max_mp)
         self.current_energie = min(self.current_energie, self.max_energie)
+        self.current_wut = min(self.current_wut, self.max_wut)
 
         if heal_on_update:
             self.current_lp = self.max_lp
             self.current_mp = self.max_mp
             self.current_energie = self.max_energie
+            self.current_wut = self.max_wut
 
     def _calculate_xp_for_next_level(self):
         """Calculates the XP needed for the next level."""
@@ -117,6 +126,8 @@ class Character:
             self.current_mp = min(self.max_mp, self.current_mp + effect["MP"])
         if "Energie" in effect:
             self.current_energie = min(self.max_energie, self.current_energie + effect["Energie"])
+        if "Wut" in effect:
+            self.current_wut = min(self.max_wut, self.current_wut + effect["Wut"])
 
         self.inventory.pop(item_index)
         return True, f"{item.name} benutzt."
