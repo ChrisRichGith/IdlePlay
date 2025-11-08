@@ -27,9 +27,7 @@ class TraderWindow:
         # Create a Toplevel window that exists on top of the main window
         self.window = tk.Toplevel(parent)
         self.window.title("Händler")
-        self.window.geometry("600x500")
-        self.window.minsize(500, 400)
-        center_window(self.window)
+        self.window.minsize(600, 500)
 
         # Ensure closing the window calls our custom function
         self.window.protocol("WM_DELETE_WINDOW", self.close_window)
@@ -41,6 +39,9 @@ class TraderWindow:
         self._setup_vars()
         self.create_widgets()
         self.update_display()
+
+        # Center the window after all widgets are created and sized
+        center_window(self.window)
 
     def _setup_vars(self):
         """Sets up tkinter StringVars for the trader window."""

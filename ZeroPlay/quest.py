@@ -47,8 +47,20 @@ class Quest:
             main_stat = CLASSES[character.klasse]["main_stat"]
             stat_value = character.get_total_stats().get(main_stat, 5)
 
-            # Progress is 1 + a fraction of the main stat (e.g., 50 Str -> 1 + 50/50 = 2 progress)
             progress_increase = 1 + (stat_value / 50.0)
+
+            # Class-specific resource consumption
+            if character.klasse == "Magier":
+                if character.current_mp > 0:
+                    character.current_mp = max(0, character.current_mp - 1) # Cost 1 mana
+                else:
+                    progress_increase *= 0.25 # Reduced progress without mana
+
+            elif character.klasse == "Schurke":
+                if character.current_energie > 0:
+                    character.current_energie = max(0, character.current_energie - 1) # Cost 1 energie
+                else:
+                    progress_increase *= 0.25 # Reduced progress without energie
 
             self.progress += progress_increase
             event_message = random.choice(QUEST_EVENTS)

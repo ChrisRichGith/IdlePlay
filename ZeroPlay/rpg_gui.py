@@ -110,6 +110,7 @@ class RpgGui(ttk.Frame):
         self.lp_label_var = tk.StringVar()
         self.mp_label_var = tk.StringVar()
         self.xp_label_var = tk.StringVar()
+        self.energie_label_var = tk.StringVar()
 
     def create_widgets(self):
         """Creates and places all the widgets in the window."""
@@ -177,9 +178,18 @@ class RpgGui(ttk.Frame):
         self.resources_label.pack(fill=tk.X, expand=True)
 
 
-        for i, (text, var_name) in enumerate([("Lebenspunkte", "lp"), ("Manapunkte", "mp"), ("Erfahrung", "xp")]):
+        progress_bars_data = [
+            ("Lebenspunkte", "lp"),
+            ("Manapunkte", "mp"),
+            ("Energie", "energie"),
+            ("Erfahrung", "xp")
+        ]
+
+        for i, (text, var_name) in enumerate(progress_bars_data):
             frame = ttk.LabelFrame(char_frame, text=text, padding=5)
-            frame.grid(row=5+i, column=0, columnspan=2, sticky="ew", pady=(5, 0))
+            # We will manage the grid position later
+            setattr(self, f"{var_name}_frame", frame)
+
             bar = ttk.Progressbar(frame, orient='horizontal', mode='determinate')
             bar.pack(fill=tk.X, expand=True)
             label_var = getattr(self, f"{var_name}_label_var")
@@ -327,6 +337,21 @@ class RpgGui(ttk.Frame):
         self.mp_bar['value'] = (self.player.current_mp / self.player.max_mp) * 100 if self.player.max_mp > 0 else 0
         self.xp_label_var.set(f"{self.player.xp} / {self.player.xp_to_next_level} XP")
         self.xp_bar['value'] = (self.player.xp / self.player.xp_to_next_level) * 100 if self.player.xp_to_next_level > 0 else 0
+
+        # Energie bar logic
+        if self.player.klasse == "Schurke":
+            self.energie_label_var.set(f"{self.player.current_energie} / {self.player.max_energie} Energie")
+            self.energie_bar['value'] = (self.player.current_energie / self.player.max_energie) * 100 if self.player.max_energie > 0 else 0
+            self.mp_frame.grid_remove()
+            self.energie_frame.grid(row=6, column=0, columnspan=2, sticky="ew", pady=(5, 0))
+        else:
+            self.energie_frame.grid_remove()
+            self.mp_frame.grid(row=6, column=0, columnspan=2, sticky="ew", pady=(5, 0))
+
+        # Place the static bars
+        self.lp_frame.grid(row=5, column=0, columnspan=2, sticky="ew", pady=(5, 0))
+        self.xp_frame.grid(row=7, column=0, columnspan=2, sticky="ew", pady=(5, 0))
+
 
         # Update resources display
         if not self.player.resources:

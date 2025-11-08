@@ -37,6 +37,8 @@ class Character:
         self.current_lp = 0
         self.max_mp = 0
         self.current_mp = 0
+        self.max_energie = 0
+        self.current_energie = 0
         self.update_derived_stats(heal_on_update=True) # Initial calculation and full heal
 
     def update_derived_stats(self, heal_on_update=False):
@@ -45,19 +47,25 @@ class Character:
         Does not heal the character unless specified (e.g., on level up).
         """
         total_stats = self.get_total_stats()
-        old_max_lp = self.max_lp
-        old_max_mp = self.max_mp
 
         self.max_lp = 50 + total_stats['Stärke'] * 5
         self.max_mp = 30 + total_stats['Intelligenz'] * 3
 
+        # Energie is only for Schurke
+        if self.klasse == "Schurke":
+            self.max_energie = 50 + total_stats['Agilität'] * 5
+        else:
+            self.max_energie = 0
+
         # Keep current values unless they exceed the new max
         self.current_lp = min(self.current_lp, self.max_lp)
         self.current_mp = min(self.current_mp, self.max_mp)
+        self.current_energie = min(self.current_energie, self.max_energie)
 
         if heal_on_update:
             self.current_lp = self.max_lp
             self.current_mp = self.max_mp
+            self.current_energie = self.max_energie
 
     def _calculate_xp_for_next_level(self):
         """Calculates the XP needed for the next level."""
@@ -107,6 +115,8 @@ class Character:
             self.current_lp = min(self.max_lp, self.current_lp + effect["LP"])
         if "MP" in effect:
             self.current_mp = min(self.max_mp, self.current_mp + effect["MP"])
+        if "Energie" in effect:
+            self.current_energie = min(self.max_energie, self.current_energie + effect["Energie"])
 
         self.inventory.pop(item_index)
         return True, f"{item.name} benutzt."
