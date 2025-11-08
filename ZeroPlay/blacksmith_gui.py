@@ -27,8 +27,8 @@ class BlacksmithWindow(tk.Toplevel):
         self.create_widgets()
         self.update_display()
 
-        # Center the window after a short delay
-        self.after(10, lambda: center_window(self))
+        # Center the window over its parent
+        center_window(self, self.master)
 
     def create_widgets(self):
         """Creates and places all widgets for the blacksmith window."""
