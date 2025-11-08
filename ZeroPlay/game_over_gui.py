@@ -53,8 +53,8 @@ class GameOverWindow(tk.Toplevel):
         ok_button = ttk.Button(container, text="OK", command=self.on_close)
         ok_button.pack(pady=(0, 10))
 
-        # Center the window now that it has its final size
-        center_window(self)
+        # Center the window after a short delay
+        self.after(10, lambda: center_window(self))
 
     def on_close(self):
         """Handles the closing of the window."""
