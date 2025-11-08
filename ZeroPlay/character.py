@@ -25,7 +25,7 @@ class Character:
         self.copper = 0
         # Load base attributes and image path from the selected class
         class_data = CLASSES.get(klasse, {})
-        self.attributes = class_data.get("attributes", {'Stärke': 5, 'Intelligenz': 5, 'Glück': 5}).copy()
+        self.attributes = class_data.get("attributes", {'Stärke': 5, 'Agilität': 5, 'Intelligenz': 5, 'Glück': 5}).copy()
         self.image_path = class_data.get("image_path", None)  # Store the image path
         self.inventory = []
         self.max_inventory_size = 10
@@ -155,6 +155,12 @@ class Character:
         Returns:
             bool: True if the item is an upgrade, False otherwise.
         """
+        # Rule 1: Must be equippable by the character's class
+        if item_from_inventory.armor_type:
+            allowed_armor = CLASSES[self.klasse].get("allowed_armor", [])
+            if item_from_inventory.armor_type not in allowed_armor:
+                return False
+
         if item_from_inventory.item_type != "Ausrüstung":
             return False
 
@@ -180,8 +186,16 @@ class Character:
         """
         if 0 <= item_index < len(self.inventory):
             item_to_equip = self.inventory[item_index]
-            slot = item_to_equip.slot
 
+            # Check for armor type restriction
+            if item_to_equip.armor_type:
+                allowed_armor = CLASSES[self.klasse].get("allowed_armor", [])
+                if item_to_equip.armor_type not in allowed_armor:
+                    # In a real GUI, we would show a message. For now, just prevent equipping.
+                    print(f"Deine Klasse ({self.klasse}) kann '{item_to_equip.armor_type}' nicht tragen.")
+                    return
+
+            slot = item_to_equip.slot
             if slot in self.equipment:
                 if self.equipment[slot]:
                     self.inventory.append(self.equipment[slot])

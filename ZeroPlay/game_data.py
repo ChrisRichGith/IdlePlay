@@ -6,20 +6,23 @@ Contains static game data, such as class definitions.
 CLASSES = {
     "Krieger": {
         "description": "Ein Meister des Nahkampfs, robust und stark.",
-        "attributes": {'Stärke': 8, 'Intelligenz': 3, 'Glück': 4},
+        "attributes": {'Stärke': 8, 'Agilität': 4, 'Intelligenz': 3, 'Glück': 4},
         "main_stat": "Stärke",
+        "allowed_armor": ["Kette", "Platte"],
         "image_path": "assets/krieger.png"
     },
     "Magier": {
         "description": "Ein weiser Gelehrter, der arkane Energien bändigt.",
-        "attributes": {'Stärke': 3, 'Intelligenz': 8, 'Glück': 4},
+        "attributes": {'Stärke': 3, 'Agilität': 5, 'Intelligenz': 8, 'Glück': 4},
         "main_stat": "Intelligenz",
+        "allowed_armor": ["Stoff"],
         "image_path": "assets/magier.png"
     },
     "Schurke": {
-        "description": "Ein listiger Halunke, der sein Glück selbst in die Hand nimmt.",
-        "attributes": {'Stärke': 5, 'Intelligenz': 5, 'Glück': 7},
-        "main_stat": "Glück",
+        "description": "Ein listiger Halunke, der schnell und präzise zuschlägt.",
+        "attributes": {'Stärke': 4, 'Agilität': 8, 'Intelligenz': 3, 'Glück': 6},
+        "main_stat": "Agilität",
+        "allowed_armor": ["Leder"],
         "image_path": "assets/schurke.png"
     }
 }
@@ -29,17 +32,17 @@ ITEM_BLUEPRINTS = {
     "Waffe": [
         {"name": ("Schwert", "n"), "base_stat": "Stärke", "base_bonus": 2},
         {"name": ("Stab", "m"), "base_stat": "Intelligenz", "base_bonus": 2},
-        {"name": ("Dolch", "m"), "base_stat": "Glück", "base_bonus": 1},
+        {"name": ("Dolch", "m"), "base_stat": "Agilität", "base_bonus": 2},
     ],
     "Kopf": [
-        {"name": ("Helm", "m"), "base_stat": "Stärke", "base_bonus": 1},
-        {"name": ("Hut", "m"), "base_stat": "Intelligenz", "base_bonus": 1},
-        {"name": ("Kapuze", "f"), "base_stat": "Glück", "base_bonus": 1},
+        {"name": ("Kettenhaube", "f"), "base_stat": "Stärke", "base_bonus": 1, "armor_type": "Kette"},
+        {"name": ("Stoffhut", "m"), "base_stat": "Intelligenz", "base_bonus": 1, "armor_type": "Stoff"},
+        {"name": ("Lederkapuze", "f"), "base_stat": "Agilität", "base_bonus": 1, "armor_type": "Leder"},
     ],
     "Brust": [
-        {"name": ("Plattenpanzer", "m"), "base_stat": "Stärke", "base_bonus": 3},
-        {"name": ("Robe", "f"), "base_stat": "Intelligenz", "base_bonus": 3},
-        {"name": ("Lederwams", "m"), "base_stat": "Glück", "base_bonus": 2},
+        {"name": ("Plattenpanzer", "m"), "base_stat": "Stärke", "base_bonus": 3, "armor_type": "Platte"},
+        {"name": ("Stoffrobe", "f"), "base_stat": "Intelligenz", "base_bonus": 3, "armor_type": "Stoff"},
+        {"name": ("Lederwams", "n"), "base_stat": "Agilität", "base_bonus": 2, "armor_type": "Leder"},
     ]
 }
 

@@ -52,7 +52,7 @@ def generate_item_for_level(level, luck):
     stats_boost[blueprint["base_stat"]] = max(1, primary_stat_value)
 
     # Add secondary stats for higher rarities
-    all_stats = ["Stärke", "Intelligenz", "Glück"]
+    all_stats = ["Stärke", "Agilität", "Intelligenz", "Glück"]
     if chosen_rarity_name in ["Episch", "Legendär", "Mythisch"]:
         possible_secondary_stats = [s for s in all_stats if s != blueprint["base_stat"]]
         if possible_secondary_stats:
@@ -73,13 +73,17 @@ def generate_item_for_level(level, luck):
     value = int((level * 1.5) + (total_stat_points * 2.0) * rarity_data["modifier"])
     value = max(1, value)
 
+    # Get armor type from blueprint if it exists
+    armor_type = blueprint.get("armor_type")
+
     return Item(
         name=item_name,
         slot=slot,
         stats_boost=stats_boost,
         value=value,
         rarity=chosen_rarity_name,
-        color=rarity_data["color"]
+        color=rarity_data["color"],
+        armor_type=armor_type
     )
 
 

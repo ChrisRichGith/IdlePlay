@@ -9,7 +9,7 @@ from game_data import ITEM_ICONS
 class Item:
     """Represents an item in the game with a name, type, value, and potential effects."""
 
-    def __init__(self, name, item_type="Ausrüstung", slot=None, stats_boost=None, value=0, rarity="Gewöhnlich", color="#ffffff"):
+    def __init__(self, name, item_type="Ausrüstung", slot=None, stats_boost=None, value=0, rarity="Gewöhnlich", color="#ffffff", armor_type=None):
         """
         Initializes an Item.
 
@@ -21,10 +21,12 @@ class Item:
             value (int): The copper value of the item.
             rarity (str): The rarity of the item.
             color (str): The hex color code for the item's rarity.
+            armor_type (str, optional): The type of armor, if applicable (e.g., 'Leder', 'Platte').
         """
         self.original_name = name
         self.item_type = item_type
         self.slot = slot
+        self.armor_type = armor_type
         self.base_stats = stats_boost if stats_boost else {}
         self.base_value = value
         self.rarity = rarity
