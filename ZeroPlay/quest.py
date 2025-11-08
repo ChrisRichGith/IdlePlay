@@ -6,6 +6,7 @@ import random
 import time
 from item import Item
 from loot_system import generate_item_for_level
+from game_data import CLASSES
 
 QUEST_EVENTS = [
     "Du kämpfst gegen einen Schleim.",
@@ -42,7 +43,14 @@ class Quest:
         Advances the quest progress and returns an event message.
         """
         if not self.is_complete():
-            self.progress += 1
+            # Determine progress increase based on character's main stat
+            main_stat = CLASSES[character.klasse]["main_stat"]
+            stat_value = character.get_total_stats().get(main_stat, 5)
+
+            # Progress is 1 + a fraction of the main stat (e.g., 50 Str -> 1 + 50/50 = 2 progress)
+            progress_increase = 1 + (stat_value / 50.0)
+
+            self.progress += progress_increase
             event_message = random.choice(QUEST_EVENTS)
 
             # On completion, inflict a small amount of damage
