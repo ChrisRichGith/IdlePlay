@@ -26,16 +26,28 @@ def format_currency(copper_amount):
 
     return " ".join(parts)
 
-def center_window(window):
+def center_window(window, parent):
     """
-    Centers a tkinter window on the screen.
+    Centers a tkinter window over its parent window.
 
     Args:
-        window: The tkinter window (Tk or Toplevel) to center.
+        window: The tkinter window (Toplevel) to center.
+        parent: The parent window.
     """
     window.update_idletasks()
+
+    # Get dimensions of the popup window
     width = window.winfo_width()
     height = window.winfo_height()
-    x = (window.winfo_screenwidth() // 2) - (width // 2)
-    y = (window.winfo_screenheight() // 2) - (height // 2)
-    window.geometry(f'{width}x{height}+{x}+{y}')
+
+    # Get the position and dimensions of the parent window
+    parent_x = parent.winfo_x()
+    parent_y = parent.winfo_y()
+    parent_width = parent.winfo_width()
+    parent_height = parent.winfo_height()
+
+    # Calculate the center position
+    x = parent_x + (parent_width // 2) - (width // 2)
+    y = parent_y + (parent_height // 2) - (height // 2)
+
+    window.geometry(f'+{x}+{y}')
