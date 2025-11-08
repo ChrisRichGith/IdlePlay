@@ -77,4 +77,8 @@ POTIONS = {
     -10: {"name": "Manatrank", "type": "MP", "value": 100, "cost": 120},
     -25: {"name": "Großer Manatrank", "type": "MP", "value": 400, "cost": 600},
     -50: {"name": "Überragender Manatrank", "type": "MP", "value": 1500, "cost": 3000},
+
+    # Energie Potions start with a key below -100
+    -101: {"name": "Kleiner Energietrank", "type": "Energie", "value": 30, "cost": 35},
+    -110: {"name": "Energietrank", "type": "Energie", "value": 100, "cost": 120},
 }

@@ -13,8 +13,7 @@ class BlacksmithWindow(tk.Toplevel):
     def __init__(self, parent, player, on_close_callback):
         super().__init__(parent)
         self.title("Schmiede")
-        self.geometry("800x600")
-        center_window(self)
+        self.minsize(800, 600)
         self.transient(parent)
         self.grab_set()
 
@@ -27,6 +26,9 @@ class BlacksmithWindow(tk.Toplevel):
 
         self.create_widgets()
         self.update_display()
+
+        # Center the window after all widgets are created
+        center_window(self)
 
     def create_widgets(self):
         """Creates and places all widgets for the blacksmith window."""
@@ -157,9 +159,8 @@ class BlacksmithWindow(tk.Toplevel):
 
         messagebox.showinfo("Erfolg!", f"{self.selected_item.name} wurde erfolgreich verbessert!")
 
-        # Refresh everything
+        # Refresh the display to show new stats and costs
         self.update_display()
-        self.on_close() # Close and reopen to refresh parent, simple solution
 
 
     def on_close(self):
