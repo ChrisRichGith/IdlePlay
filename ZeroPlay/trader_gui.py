@@ -118,9 +118,9 @@ class TraderWindow:
         for item in self.player.inventory:
             self.sell_listbox.insert(tk.END, str(item))
 
-        # Update buy listbox with level-appropriate potions
+        # Update buy listbox with class and level-appropriate potions
         self.buy_listbox.delete(0, tk.END)
-        self.potions_for_sale = self.trader.get_potions_for_sale(self.player.level)
+        self.potions_for_sale = self.trader.get_potions_for_sale(self.player)
         for item in self.potions_for_sale:
             self.buy_listbox.insert(tk.END, str(item))
 

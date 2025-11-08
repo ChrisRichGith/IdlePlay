@@ -81,4 +81,8 @@ POTIONS = {
     # Energie Potions start with a key below -100
     -101: {"name": "Kleiner Energietrank", "type": "Energie", "value": 30, "cost": 35},
     -110: {"name": "Energietrank", "type": "Energie", "value": 100, "cost": 120},
+
+    # Wut Potions start with a key below -200
+    -201: {"name": "Kleiner Wuttrank", "type": "Wut", "value": 20, "cost": 40},
+    -210: {"name": "Wuttrank", "type": "Wut", "value": 75, "cost": 130},
 }

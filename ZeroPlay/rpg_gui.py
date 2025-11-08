@@ -111,6 +111,7 @@ class RpgGui(ttk.Frame):
         self.mp_label_var = tk.StringVar()
         self.xp_label_var = tk.StringVar()
         self.energie_label_var = tk.StringVar()
+        self.wut_label_var = tk.StringVar()
 
     def create_widgets(self):
         """Creates and places all the widgets in the window."""
@@ -182,6 +183,7 @@ class RpgGui(ttk.Frame):
             ("Lebenspunkte", "lp"),
             ("Manapunkte", "mp"),
             ("Energie", "energie"),
+            ("Wut", "wut"),
             ("Erfahrung", "xp")
         ]
 
@@ -338,14 +340,20 @@ class RpgGui(ttk.Frame):
         self.xp_label_var.set(f"{self.player.xp} / {self.player.xp_to_next_level} XP")
         self.xp_bar['value'] = (self.player.xp / self.player.xp_to_next_level) * 100 if self.player.xp_to_next_level > 0 else 0
 
-        # Energie bar logic
+        # Dynamically display the correct resource bar based on class
+        self.mp_frame.grid_remove()
+        self.energie_frame.grid_remove()
+        self.wut_frame.grid_remove()
+
         if self.player.klasse == "Schurke":
             self.energie_label_var.set(f"{self.player.current_energie} / {self.player.max_energie} Energie")
             self.energie_bar['value'] = (self.player.current_energie / self.player.max_energie) * 100 if self.player.max_energie > 0 else 0
-            self.mp_frame.grid_remove()
             self.energie_frame.grid(row=6, column=0, columnspan=2, sticky="ew", pady=(5, 0))
-        else:
-            self.energie_frame.grid_remove()
+        elif self.player.klasse == "Krieger":
+            self.wut_label_var.set(f"{self.player.current_wut} / {self.player.max_wut} Wut")
+            self.wut_bar['value'] = (self.player.current_wut / self.player.max_wut) * 100 if self.player.max_wut > 0 else 0
+            self.wut_frame.grid(row=6, column=0, columnspan=2, sticky="ew", pady=(5, 0))
+        else: # Default to Mana for Magier and any other future classes
             self.mp_frame.grid(row=6, column=0, columnspan=2, sticky="ew", pady=(5, 0))
 
         # Place the static bars

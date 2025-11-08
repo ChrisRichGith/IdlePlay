@@ -13,11 +13,23 @@ class Trader:
         self.inventory_upgrade_cost = 1000 # Start cost: 10 silver
         self.upgrade_cost_increase_factor = 1.8
 
-    def get_potions_for_sale(self, character_level):
-        """Returns a list of potions available at the character's level."""
+    def get_potions_for_sale(self, character):
+        """Returns a list of potions available based on character level and class."""
         available_potions = []
+        char_level = character.level
+        char_class = character.klasse
+
+        # Determine which potion types are relevant for the class
+        relevant_types = ["LP"] # Health potions are for everyone
+        if char_class == "Magier":
+            relevant_types.append("MP")
+        elif char_class == "Schurke":
+            relevant_types.append("Energie")
+        elif char_class == "Krieger":
+            relevant_types.append("Wut")
+
         for level_req, data in POTIONS.items():
-            if character_level >= abs(level_req):
+            if char_level >= abs(level_req) and data["type"] in relevant_types:
                 potion = Item(
                     name=data["name"],
                     item_type="Verbrauchsgut",
