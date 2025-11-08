@@ -687,12 +687,11 @@ class CountdownDialog(tk.Toplevel):
 
         self.protocol("WM_DELETE_WINDOW", self.destroy)
 
-        # Center the window
-        self.update_idletasks()
-        center_window(self)
-
         # Start the countdown
         self.update_countdown()
+
+        # Center the window after widgets are created
+        center_window(self)
 
     def update_countdown(self):
         if self.countdown > 0:

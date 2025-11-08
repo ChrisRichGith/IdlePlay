@@ -21,7 +21,6 @@ class HighscoreWindow(tk.Toplevel):
         self.populate_scores()
 
         self.protocol("WM_DELETE_WINDOW", self.destroy)
-        center_window(self)
 
     def create_widgets(self):
         """Creates and places the widgets for the window."""
@@ -56,6 +55,8 @@ class HighscoreWindow(tk.Toplevel):
         # Close button
         close_button = ttk.Button(container, text="Schließen", command=self.destroy)
         close_button.grid(row=1, column=0, columnspan=2, pady=(10, 0))
+
+        center_window(self)
 
     def populate_scores(self):
         """Loads scores and inserts them into the Treeview."""

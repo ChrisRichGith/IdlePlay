@@ -25,7 +25,6 @@ class GameOverWindow(tk.Toplevel):
 
         self.create_widgets(player)
         self.protocol("WM_DELETE_WINDOW", self.on_close)
-        center_window(self)
 
     def create_widgets(self, player):
         """Creates and places the widgets for the window."""
@@ -53,6 +52,9 @@ class GameOverWindow(tk.Toplevel):
         # OK Button
         ok_button = ttk.Button(container, text="OK", command=self.on_close)
         ok_button.pack(pady=(0, 10))
+
+        # Center the window now that it has its final size
+        center_window(self)
 
     def on_close(self):
         """Handles the closing of the window."""
