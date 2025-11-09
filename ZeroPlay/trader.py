@@ -28,8 +28,8 @@ class Trader:
         elif char_class == "Krieger":
             relevant_types.append("Wut")
 
-        for level_req, data in POTIONS.items():
-            if char_level >= abs(level_req) and data["type"] in relevant_types:
+        for data in POTIONS:
+            if char_level >= data["level_req"] and data["type"] in relevant_types:
                 potion = Item(
                     name=data["name"],
                     item_type="Verbrauchsgut",
