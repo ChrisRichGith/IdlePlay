@@ -41,7 +41,7 @@ class TraderWindow:
         self.update_display()
 
         # Center the window over its parent
-        center_window(self.window, self.parent)
+        center_window(self.window, self.parent.winfo_toplevel())
 
     def _setup_vars(self):
         """Sets up tkinter StringVars for the trader window."""

@@ -56,7 +56,7 @@ class HighscoreWindow(tk.Toplevel):
         close_button = ttk.Button(container, text="Schließen", command=self.destroy)
         close_button.grid(row=1, column=0, columnspan=2, pady=(10, 0))
 
-        center_window(self, self.master)
+        center_window(self, self.master.winfo_toplevel())
 
     def populate_scores(self):
         """Loads scores and inserts them into the Treeview."""

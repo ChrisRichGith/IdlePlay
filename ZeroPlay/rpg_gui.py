@@ -720,7 +720,7 @@ class CountdownDialog(tk.Toplevel):
         self.update_countdown()
 
         # Center the window over its parent
-        center_window(self, self.parent)
+        center_window(self, self.parent.winfo_toplevel())
 
     def update_countdown(self):
         if self.countdown > 0:
