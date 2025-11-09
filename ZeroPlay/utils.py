@@ -22,7 +22,7 @@ def format_currency(copper_amount):
     if silver > 0:
         parts.append(f"{silver}💿")
     if copper > 0:
-        parts.append(f"{copper}🥉")
+        parts.append(f"{copper}🟤")
 
     return " ".join(parts)
 
