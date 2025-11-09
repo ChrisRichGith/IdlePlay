@@ -491,8 +491,8 @@ class RpgGui(ttk.Frame):
         self.update_minigame() # Update the minigame on each tick
 
         event_message = self.current_quest.advance(self.player)
-        # Only log the final message when the quest is complete
-        if event_message and self.current_quest.is_complete():
+        # Log every event message received from the quest
+        if event_message:
             self.add_to_log(event_message)
 
         if self.player.current_lp <= 0:
