@@ -6,14 +6,10 @@ import random
 import time
 from item import Item
 from loot_system import generate_item_for_level
-from game_data import CLASSES, WARRIOR_EVENTS, MAGE_EVENTS, ROGUE_EVENTS
-
-# Generic events for fallback
-QUEST_EVENTS = [
-    "Du findest eine versteckte Truhe!",
-    "Du ruhst dich kurz aus.",
-    "Du findest eine Abkürzung.",
-]
+from game_data import (
+    CLASSES, WARRIOR_EVENTS, MAGE_EVENTS, ROGUE_EVENTS,
+    TRAVEL_EVENTS_TOWARDS, TRAVEL_EVENTS_AWAY
+)
 
 class Quest:
     """Represents a quest that automatically progresses and grants rewards."""
@@ -29,6 +25,7 @@ class Quest:
         self.description = description
         self.duration = duration
         self.progress = 0
+        self.phase = "Anreise" # Anreise, Aktion, Rückkehr
 
     def is_complete(self):
         """Checks if the quest is complete."""
@@ -38,52 +35,64 @@ class Quest:
         """
         Advances the quest progress and returns an event message.
         """
-        if not self.is_complete():
-            # Determine progress increase based on character's main stat
-            main_stat = CLASSES[character.klasse]["main_stat"]
-            stat_value = character.get_total_stats().get(main_stat, 5)
+        if self.is_complete():
+            return None
 
-            progress_increase = 1 + (stat_value / 50.0)
+        # --- 1. Determine current phase ---
+        phase_length = self.duration / 3
+        if self.progress < phase_length:
+            self.phase = "Anreise"
+        elif self.progress < phase_length * 2:
+            self.phase = "Aktion"
+        else:
+            self.phase = "Rückkehr"
 
-            # Class-specific resource consumption
+        # --- 2. Calculate progress and consume resources ---
+        main_stat = CLASSES[character.klasse]["main_stat"]
+        stat_value = character.get_total_stats().get(main_stat, 5)
+        progress_increase = 1 + (stat_value / 50.0)
+
+        # Only consume resources during the 'Aktion' phase
+        if self.phase == "Aktion":
             if character.klasse == "Magier":
                 if character.current_mp > 0:
-                    character.current_mp = max(0, character.current_mp - 1) # Cost 1 mana
+                    character.current_mp = max(0, character.current_mp - 2) # Higher cost for action
                 else:
-                    progress_increase *= 0.25 # Reduced progress without mana
-
+                    progress_increase *= 0.25
             elif character.klasse == "Schurke":
                 if character.current_energie > 0:
-                    character.current_energie = max(0, character.current_energie - 1) # Cost 1 energie
+                    character.current_energie = max(0, character.current_energie - 2)
                 else:
-                    progress_increase *= 0.25 # Reduced progress without energie
-
+                    progress_increase *= 0.25
             elif character.klasse == "Krieger":
                 if character.current_wut > 0:
-                    character.current_wut = max(0, character.current_wut - 1) # Cost 1 wut
+                    character.current_wut = max(0, character.current_wut - 2)
                 else:
-                    progress_increase *= 0.5 # Reduced progress without wut
+                    progress_increase *= 0.5
 
-            self.progress += progress_increase
+        self.progress += progress_increase
 
-            # Select event message based on class
+        # --- 3. Select event message based on phase and class ---
+        event_message = ""
+        if self.phase == "Anreise":
+            event_message = random.choice(TRAVEL_EVENTS_TOWARDS)
+        elif self.phase == "Rückkehr":
+            event_message = random.choice(TRAVEL_EVENTS_AWAY)
+        elif self.phase == "Aktion":
             if character.klasse == "Krieger":
                 event_message = random.choice(WARRIOR_EVENTS)
             elif character.klasse == "Magier":
                 event_message = random.choice(MAGE_EVENTS)
             elif character.klasse == "Schurke":
                 event_message = random.choice(ROGUE_EVENTS)
-            else:
-                event_message = random.choice(QUEST_EVENTS) # Fallback
 
-            # On completion, inflict a small amount of damage
-            if self.is_complete():
-                damage = random.randint(5, 15)
-                character.current_lp = max(0, character.current_lp - damage)
-                event_message = f"Quest abgeschlossen! Du hast {damage} Schaden erlitten."
+        # --- 4. Handle quest completion ---
+        if self.is_complete():
+            damage = random.randint(5, 15)
+            character.current_lp = max(0, character.current_lp - damage)
+            event_message = f"Quest abgeschlossen! Du hast {damage} Schaden erlitten."
 
-            return event_message
-        return None
+        return f"[{self.phase}] {event_message}"
 
 
     def generate_reward(self, character):

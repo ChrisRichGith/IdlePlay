@@ -114,3 +114,19 @@ ROGUE_EVENTS = [
     "Du knackst eine kleine Schatulle und findest Gold.",
     "Du weichst einer Falle geschickt aus.",
 ]
+
+TRAVEL_EVENTS_TOWARDS = [
+    "Du beginnst deine Reise und verlässt die Stadt.",
+    "Du durchquerst einen dichten Wald.",
+    "Ein alter, knorriger Baum weist dir den Weg.",
+    "Du folgst einem gewundenen Pfad den Berg hinauf.",
+    "Du überquerst eine wackelige Hängebrücke.",
+]
+
+TRAVEL_EVENTS_AWAY = [
+    "Du machst dich auf den Rückweg.",
+    "Die Sonne sinkt langsam am Horizont.",
+    "Du erkennst die Lichter der Stadt in der Ferne.",
+    "Ein freundlicher Händler gibt dir eine Wegbeschreibung.",
+    "Du kommst an einer verlassenen Ruine vorbei.",
+]
