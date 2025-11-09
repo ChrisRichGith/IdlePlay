@@ -18,11 +18,11 @@ def format_currency(copper_amount):
 
     parts = []
     if gold > 0:
-        parts.append(f"{gold}g")
+        parts.append(f"{gold}🪙")
     if silver > 0:
-        parts.append(f"{silver}s")
+        parts.append(f"{silver}💿")
     if copper > 0:
-        parts.append(f"{copper}c")
+        parts.append(f"{copper}🥉")
 
     return " ".join(parts)
 
