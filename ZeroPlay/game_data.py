@@ -66,23 +66,24 @@ ITEM_ICONS = {
     "Verbrauchsgut": "🧪"
 }
 
-POTIONS = {
-    1: {"name": "Kleiner Heiltrank", "type": "LP", "value": 50, "cost": 25},
-    10: {"name": "Heiltrank", "type": "LP", "value": 150, "cost": 100},
-    25: {"name": "Großer Heiltrank", "type": "LP", "value": 500, "cost": 500},
-    50: {"name": "Überragender Heiltrank", "type": "LP", "value": 2000, "cost": 2500},
+POTIONS = [
+    # LP Potions
+    {"level_req": 1, "name": "Kleiner Heiltrank", "type": "LP", "value": 50, "cost": 25},
+    {"level_req": 10, "name": "Heiltrank", "type": "LP", "value": 150, "cost": 100},
+    {"level_req": 25, "name": "Großer Heiltrank", "type": "LP", "value": 500, "cost": 500},
+    {"level_req": 50, "name": "Überragender Heiltrank", "type": "LP", "value": 2000, "cost": 2500},
 
-    # Mana Potions start with a negative key to distinguish them easily if needed
-    -1: {"name": "Kleiner Manatrank", "type": "MP", "value": 30, "cost": 35},
-    -10: {"name": "Manatrank", "type": "MP", "value": 100, "cost": 120},
-    -25: {"name": "Großer Manatrank", "type": "MP", "value": 400, "cost": 600},
-    -50: {"name": "Überragender Manatrank", "type": "MP", "value": 1500, "cost": 3000},
+    # Mana Potions
+    {"level_req": 1, "name": "Kleiner Manatrank", "type": "MP", "value": 30, "cost": 35},
+    {"level_req": 10, "name": "Manatrank", "type": "MP", "value": 100, "cost": 120},
+    {"level_req": 25, "name": "Großer Manatrank", "type": "MP", "value": 400, "cost": 600},
+    {"level_req": 50, "name": "Überragender Manatrank", "type": "MP", "value": 1500, "cost": 3000},
 
-    # Energie Potions start with a key below -100
-    -101: {"name": "Kleiner Energietrank", "type": "Energie", "value": 30, "cost": 35},
-    -110: {"name": "Energietrank", "type": "Energie", "value": 100, "cost": 120},
+    # Energie Potions
+    {"level_req": 1, "name": "Kleiner Energietrank", "type": "Energie", "value": 30, "cost": 35},
+    {"level_req": 10, "name": "Energietrank", "type": "Energie", "value": 100, "cost": 120},
 
-    # Wut Potions start with a key below -200
-    -201: {"name": "Kleiner Wuttrank", "type": "Wut", "value": 20, "cost": 40},
-    -210: {"name": "Wuttrank", "type": "Wut", "value": 75, "cost": 130},
-}
+    # Wut Potions
+    {"level_req": 1, "name": "Kleiner Wuttrank", "type": "Wut", "value": 20, "cost": 40},
+    {"level_req": 10, "name": "Wuttrank", "type": "Wut", "value": 75, "cost": 130},
+]
