@@ -76,18 +76,7 @@ class Quest:
         self.progress += progress_increase
 
         # --- 3. Select event message based on phase and class ---
-        event_message = ""
-        if self.phase == "Anreise":
-            event_message = random.choice(TRAVEL_EVENTS_TOWARDS)
-        elif self.phase == "Rückkehr":
-            event_message = random.choice(TRAVEL_EVENTS_AWAY)
-        elif self.phase == "Aktion":
-            if character.klasse == "Krieger":
-                event_message = random.choice(WARRIOR_EVENTS)
-            elif character.klasse == "Magier":
-                event_message = random.choice(MAGE_EVENTS)
-            elif character.klasse == "Schurke":
-                event_message = random.choice(ROGUE_EVENTS)
+        event_message = None # By default, no message is generated
 
         # --- 4. Handle quest completion ---
         if self.is_complete():
