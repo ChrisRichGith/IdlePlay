@@ -62,6 +62,12 @@ class Quest:
                 else:
                     progress_increase *= 0.25 # Reduced progress without energie
 
+            elif character.klasse == "Krieger":
+                if character.current_wut > 0:
+                    character.current_wut = max(0, character.current_wut - 1) # Cost 1 wut
+                else:
+                    progress_increase *= 0.5 # Reduced progress without wut
+
             self.progress += progress_increase
             event_message = random.choice(QUEST_EVENTS)
 
