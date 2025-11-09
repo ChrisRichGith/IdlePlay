@@ -87,3 +87,30 @@ POTIONS = [
     {"level_req": 1, "name": "Kleiner Wuttrank", "type": "Wut", "value": 20, "cost": 40},
     {"level_req": 10, "name": "Wuttrank", "type": "Wut", "value": 75, "cost": 130},
 ]
+
+WARRIOR_EVENTS = [
+    "Du schmetterst deinen Schild in einen Gegner.",
+    "Mit einem mächtigen Hieb spaltest du einen Helm.",
+    "Du parierst einen Angriff und konterst.",
+    "Ein lauter Schlachtruf lässt deine Feinde erzittern.",
+    "Du trittst eine Kiste auf und findest eine Münze.",
+    "Dein Schwert trifft zielsicher.",
+]
+
+MAGE_EVENTS = [
+    "Ein Feuerball schlägt zischend in die Gegnerreihen ein.",
+    "Du wirkst einen Schutzzauber, der einen Hieb abwehrt.",
+    "Eissplitter frieren einen Angreifer an Ort und Stelle fest.",
+    "Ein Kettenblitz springt von einem Feind zum nächsten.",
+    "Du murmelst eine arkane Formel und stärkst deine Waffe.",
+    "Du findest eine alte Schriftrolle.",
+]
+
+ROGUE_EVENTS = [
+    "Du springst aus den Schatten und landest einen kritischen Treffer.",
+    "Mit einem schnellen Schnitt entwaffnest du einen Gegner.",
+    "Du wirfst einen Dolch präzise auf ein entferntes Ziel.",
+    "Eine Rauchbombe sorgt für Verwirrung.",
+    "Du knackst eine kleine Schatulle und findest Gold.",
+    "Du weichst einer Falle geschickt aus.",
+]
