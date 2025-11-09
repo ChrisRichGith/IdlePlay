@@ -90,6 +90,7 @@ class RpgGui(ttk.Frame):
         self.current_quest = None
         self.is_auto_questing = False
         self.game_over = False
+        self.quest_loop_id = None # To hold the .after() job ID
 
         # Minigame state
         self.minigame_orbs = {}
@@ -371,6 +372,12 @@ class RpgGui(ttk.Frame):
         self.update_button_states()
         self.update_idletasks()
 
+    def show_paused_messagebox(self, title, message, **kwargs):
+        """Shows a messagebox while pausing the quest loop."""
+        self.pause_quest_loop()
+        messagebox.showinfo(title, message, **kwargs)
+        self.resume_quest_loop()
+
     def add_to_log(self, message):
         self.quest_log.config(state=tk.NORMAL)
         self.quest_log.insert(tk.END, message + "\n")
@@ -400,7 +407,8 @@ class RpgGui(ttk.Frame):
             return
         if len(self.player.inventory) >= self.player.max_inventory_size:
             self.set_loot_text("Inventar voll! Auto-Quest gestoppt.")
-            messagebox.showinfo("Inventar voll", "Dein Inventar ist voll. Besuche den Händler!")
+            # Use the paused messagebox
+            self.show_paused_messagebox("Inventar voll", "Dein Inventar ist voll. Besuche den Händler!")
             if self.is_auto_questing:
                 self.toggle_auto_quest()
             return
@@ -498,8 +506,9 @@ class RpgGui(ttk.Frame):
                 loot_message += f" und '{item.name}'" if item_added else f" (aber '{item.name}' passte nicht ins Inventar!)"
             self.set_loot_text(loot_message)
             if level_up_info:
+                self.pause_quest_loop()
                 level_up_summary = f"Level Up! Du bist jetzt Level {self.player.level}!\n\nAttribut-Boni:\n" + "\n".join(level_up_info)
-                CountdownDialog(self, title="Level Aufstieg!", message=level_up_summary)
+                CountdownDialog(self, title="Level Aufstieg!", message=level_up_summary, on_close_callback=self.resume_quest_loop)
             self.current_quest = None
             self.progress_bar['value'] = 0
 
@@ -512,8 +521,19 @@ class RpgGui(ttk.Frame):
         else:
             progress_percent = (self.current_quest.progress / self.current_quest.duration) * 100
             self.progress_bar['value'] = progress_percent
-            self.master.after(150, self.advance_quest)
+            self.quest_loop_id = self.master.after(150, self.advance_quest)
         self.update_display()
+
+    def pause_quest_loop(self):
+        """Pauses the quest advancement loop."""
+        if self.quest_loop_id:
+            self.master.after_cancel(self.quest_loop_id)
+            self.quest_loop_id = None
+
+    def resume_quest_loop(self):
+        """Resumes the quest advancement loop if a quest is active."""
+        if self.current_quest and not self.quest_loop_id:
+            self.advance_quest()
 
     def equip_item(self):
         selected_indices = self.inventory_listbox.curselection()
@@ -673,12 +693,13 @@ class Tooltip:
 
 class CountdownDialog(tk.Toplevel):
     """A modal dialog with a countdown timer that closes automatically."""
-    def __init__(self, parent, title, message, countdown=5):
+    def __init__(self, parent, title, message, countdown=5, on_close_callback=None):
         super().__init__(parent)
         self.title(title)
         self.message = message
         self.countdown = countdown
         self.parent = parent
+        self.on_close_callback = on_close_callback
 
         # Make window modal
         self.transient(parent)
@@ -713,4 +734,8 @@ class CountdownDialog(tk.Toplevel):
         # Cancel the pending `after` call before destroying the window
         if hasattr(self, '_after_id'):
             self.after_cancel(self._after_id)
+
+        if self.on_close_callback:
+            self.on_close_callback()
+
         super().destroy()
