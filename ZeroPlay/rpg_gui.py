@@ -455,11 +455,16 @@ class RpgGui(ttk.Frame):
                 x = random.randint(10, canvas_width - 10)
                 y = random.randint(10, canvas_height - 10)
 
-                # 80% chance for Iron Ore, 20% for Jewel
-                resource_type = "Eisenerz" if random.random() < 0.8 else "Juwel"
-                color = "grey" if resource_type == "Eisenerz" else "cyan"
+                # Determine resource type and symbol
+                if random.random() < 0.8:
+                    resource_type = "Eisenerz"
+                    symbol = "🪨"
+                else:
+                    resource_type = "Juwel"
+                    symbol = "💎"
 
-                orb_id = self.minigame_canvas.create_oval(x-10, y-10, x+10, y+10, fill=color, outline="black")
+                # Create a text item on the canvas
+                orb_id = self.minigame_canvas.create_text(x, y, text=symbol, font=("", 14))
 
                 # Bind click event
                 self.minigame_canvas.tag_bind(orb_id, "<Button-1>", lambda event, o_id=orb_id: self.on_orb_click(o_id))
