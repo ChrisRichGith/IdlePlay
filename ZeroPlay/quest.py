@@ -6,17 +6,13 @@ import random
 import time
 from item import Item
 from loot_system import generate_item_for_level
-from game_data import CLASSES
+from game_data import CLASSES, WARRIOR_EVENTS, MAGE_EVENTS, ROGUE_EVENTS
 
+# Generic events for fallback
 QUEST_EVENTS = [
-    "Du kämpfst gegen einen Schleim.",
     "Du findest eine versteckte Truhe!",
-    "Du umgehst eine Falle.",
-    "Ein Goblin greift an!",
     "Du ruhst dich kurz aus.",
     "Du findest eine Abkürzung.",
-    "Du verirrst dich, findest aber den Weg zurück.",
-    "Ein Händler bietet dir einen seltsamen Trank an.",
 ]
 
 class Quest:
@@ -69,7 +65,16 @@ class Quest:
                     progress_increase *= 0.5 # Reduced progress without wut
 
             self.progress += progress_increase
-            event_message = random.choice(QUEST_EVENTS)
+
+            # Select event message based on class
+            if character.klasse == "Krieger":
+                event_message = random.choice(WARRIOR_EVENTS)
+            elif character.klasse == "Magier":
+                event_message = random.choice(MAGE_EVENTS)
+            elif character.klasse == "Schurke":
+                event_message = random.choice(ROGUE_EVENTS)
+            else:
+                event_message = random.choice(QUEST_EVENTS) # Fallback
 
             # On completion, inflict a small amount of damage
             if self.is_complete():
