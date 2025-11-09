@@ -28,7 +28,7 @@ class BlacksmithWindow(tk.Toplevel):
         self.update_display()
 
         # Center the window over its parent
-        center_window(self, self.master)
+        center_window(self, self.master.winfo_toplevel())
 
     def create_widgets(self):
         """Creates and places all widgets for the blacksmith window."""

@@ -54,7 +54,7 @@ class GameOverWindow(tk.Toplevel):
         ok_button.pack(pady=(0, 10))
 
         # Center the window over its parent
-        center_window(self, self.master)
+        center_window(self, self.master.winfo_toplevel())
 
     def on_close(self):
         """Handles the closing of the window."""
