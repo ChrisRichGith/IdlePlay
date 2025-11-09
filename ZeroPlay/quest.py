@@ -8,7 +8,7 @@ from item import Item
 from loot_system import generate_item_for_level
 from game_data import (
     CLASSES, WARRIOR_EVENTS, MAGE_EVENTS, ROGUE_EVENTS,
-    TRAVEL_EVENTS_TOWARDS, TRAVEL_EVENTS_AWAY
+    QUEST_LOCATIONS, QUEST_ACTIONS_PREFIX, QUEST_RETURNS
 )
 
 class Quest:
@@ -26,6 +26,9 @@ class Quest:
         self.duration = duration
         self.progress = 0
         self.phase = "Anreise" # Anreise, Aktion, Rückkehr
+
+        # Procedurally generate static phase texts
+        self.generate_phase_texts()
 
     def is_complete(self):
         """Checks if the quest is complete."""
@@ -92,8 +95,27 @@ class Quest:
             character.current_lp = max(0, character.current_lp - damage)
             event_message = f"Quest abgeschlossen! Du hast {damage} Schaden erlitten."
 
-        return f"[{self.phase}] {event_message}"
+        # Generate a class-specific action message, but less frequently
+        if self.phase == "Aktion" and random.random() < 0.2: # 20% chance per tick
+            if character.klasse == "Krieger":
+                return random.choice(WARRIOR_EVENTS)
+            elif character.klasse == "Magier":
+                return random.choice(MAGE_EVENTS)
+            elif character.klasse == "Schurke":
+                return random.choice(ROGUE_EVENTS)
 
+        # Return None most of the time to keep the log clean
+        return None
+
+    def generate_phase_texts(self):
+        """Generates and stores the descriptive text for each quest phase."""
+        location = random.choice(QUEST_LOCATIONS)
+        action_prefix = random.choice(QUEST_ACTIONS_PREFIX)
+        return_prefix = random.choice(QUEST_RETURNS)
+
+        self.travel_text = f"Deine Quest führt dich {location}."
+        self.action_text = f"{action_prefix} {self.description}."
+        self.return_text = return_prefix
 
     def generate_reward(self, character):
         """

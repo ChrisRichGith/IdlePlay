@@ -372,6 +372,12 @@ class RpgGui(ttk.Frame):
         self.update_button_states()
         self.update_idletasks()
 
+    def clear_log(self):
+        """Clears the quest log."""
+        self.quest_log.config(state=tk.NORMAL)
+        self.quest_log.delete("1.0", tk.END)
+        self.quest_log.config(state=tk.DISABLED)
+
     def show_paused_messagebox(self, title, message, **kwargs):
         """Shows a messagebox while pausing the quest loop."""
         self.pause_quest_loop()
@@ -428,7 +434,9 @@ class RpgGui(ttk.Frame):
             self.quest_image_label.image = None
 
         self.current_quest = Quest(quest_name)
-        self.add_to_log(f"Neue Quest: {quest_name}")
+        # Clear log and show the first phase text
+        self.clear_log()
+        self.add_to_log(self.current_quest.travel_text)
         self.progress_bar['value'] = 0
         self.update_display()
         self.advance_quest()
@@ -490,8 +498,19 @@ class RpgGui(ttk.Frame):
 
         self.update_minigame() # Update the minigame on each tick
 
+        old_phase = self.current_quest.phase
         event_message = self.current_quest.advance(self.player)
-        # Log every event message received from the quest
+        new_phase = self.current_quest.phase
+
+        # Display the static phase text only when the phase changes
+        if new_phase != old_phase:
+            self.clear_log()
+            if new_phase == "Aktion":
+                self.add_to_log(self.current_quest.action_text)
+            elif new_phase == "Rückkehr":
+                self.add_to_log(self.current_quest.return_text)
+
+        # Log intermittent action messages
         if event_message:
             self.add_to_log(event_message)
 

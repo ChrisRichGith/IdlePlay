@@ -115,18 +115,24 @@ ROGUE_EVENTS = [
     "Du weichst einer Falle geschickt aus.",
 ]
 
-TRAVEL_EVENTS_TOWARDS = [
-    "Du beginnst deine Reise und verlässt die Stadt.",
-    "Du durchquerst einen dichten Wald.",
-    "Ein alter, knorriger Baum weist dir den Weg.",
-    "Du folgst einem gewundenen Pfad den Berg hinauf.",
-    "Du überquerst eine wackelige Hängebrücke.",
+# --- Components for procedural text generation ---
+
+QUEST_LOCATIONS = [
+    "in den düsteren Wäldern",
+    "zu den vergessenen Ruinen",
+    "durch die sengende Wüste",
+    "über die eisigen Gipfel",
+    "tief in die Goblin-Minen",
 ]
 
-TRAVEL_EVENTS_AWAY = [
-    "Du machst dich auf den Rückweg.",
-    "Die Sonne sinkt langsam am Horizont.",
-    "Du erkennst die Lichter der Stadt in der Ferne.",
-    "Ein freundlicher Händler gibt dir eine Wegbeschreibung.",
-    "Du kommst an einer verlassenen Ruine vorbei.",
+QUEST_ACTIONS_PREFIX = [
+    "Dort angekommen, musst du",
+    "Deine Aufgabe ist es,",
+    "Im Zielgebiet angekommen, gilt es,",
+]
+
+QUEST_RETURNS = [
+    "Nach getaner Arbeit machst du dich auf den Rückweg.",
+    "Die Aufgabe ist erfüllt und du trittst die Heimreise an.",
+    "Erschöpft, aber erfolgreich, beginnst du den Rückmarsch.",
 ]
