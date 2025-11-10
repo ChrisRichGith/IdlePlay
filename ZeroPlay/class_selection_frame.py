@@ -19,6 +19,10 @@ class ClassSelectionFrame(ttk.Frame):
 
         self.create_widgets()
 
+        # Set default selection to "Krieger" and display its info
+        self.class_var.set("Krieger")
+        self.show_class_info()
+
     def create_widgets(self):
         """Creates the widgets for the class selection frame."""
         ttk.Label(self, text="Charakter erstellen", font=("Helvetica", 16)).pack(pady=20)
@@ -44,10 +48,10 @@ class ClassSelectionFrame(ttk.Frame):
         ttk.Label(left_frame, text="Wähle deine Klasse:", font=("Helvetica", 12)).pack(pady=(10, 10))
         self.class_var = tk.StringVar()
         class_options_frame = ttk.Frame(left_frame)
-        class_options_frame.pack()
+        class_options_frame.pack(anchor=tk.W)
         for class_name in CLASSES.keys():
             rb = ttk.Radiobutton(class_options_frame, text=class_name, variable=self.class_var, value=class_name, command=self.show_class_info)
-            rb.pack(side=tk.LEFT, padx=10)
+            rb.pack(anchor=tk.W, pady=2)
 
         # Class Info
         self.info_frame = ttk.LabelFrame(left_frame, text="Klasseninfo", padding="10", height=150)
