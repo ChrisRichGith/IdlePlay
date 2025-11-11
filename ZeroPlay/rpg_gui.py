@@ -250,8 +250,19 @@ class RpgGui(ttk.Frame):
         # Minigame Canvas
         minigame_frame = ttk.LabelFrame(actions_frame, text="Ressourcenjagd", padding="5")
         minigame_frame.pack(fill=tk.X, pady=(10, 0), expand=True)
-        self.minigame_canvas = tk.Canvas(minigame_frame, width=120, height=150, bg="grey", relief="sunken", borderwidth=1)
+        self.minigame_canvas = tk.Canvas(minigame_frame, width=120, height=150, relief="sunken", borderwidth=1)
         self.minigame_canvas.pack(expand=True, fill=tk.BOTH)
+
+        try:
+            # Load and set background image for minigame
+            # Store as an instance attribute to prevent garbage collection
+            self.minigame_bg_img_pil = Image.open("assets/minigame_background.png")
+            self.minigame_bg_img_pil = self.minigame_bg_img_pil.resize((120, 150))
+            self.minigame_bg_img = ImageTk.PhotoImage(self.minigame_bg_img_pil)
+
+            self.minigame_canvas.create_image(0, 0, image=self.minigame_bg_img, anchor='nw')
+        except FileNotFoundError:
+            self.minigame_canvas.config(bg="grey") # Fallback color
 
 
     def _create_log_frame(self, parent):
