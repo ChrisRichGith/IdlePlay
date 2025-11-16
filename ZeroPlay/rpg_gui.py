@@ -252,16 +252,14 @@ class RpgGui(ttk.Frame):
         minigame_frame.pack(fill=tk.X, pady=(10, 0), expand=True)
         self.minigame_canvas = tk.Canvas(minigame_frame, width=240, height=300, relief="sunken", borderwidth=1)
         self.minigame_canvas.pack(expand=True, fill=tk.BOTH)
+        self.minigame_canvas.bind("<Configure>", self._resize_minigame_background)
 
         try:
-            # Load and set background image for minigame
-            # Store as an instance attribute to prevent garbage collection
-            self.minigame_bg_img_pil = Image.open("assets/minigame_background.png")
-            self.minigame_bg_img_pil = self.minigame_bg_img_pil.resize((240, 300))
-            self.minigame_bg_img = ImageTk.PhotoImage(self.minigame_bg_img_pil)
-
-            self.minigame_canvas.create_image(0, 0, image=self.minigame_bg_img, anchor='nw')
+            # Load the original background image. It will be resized and drawn by the event handler.
+            # Store the original PIL image to use for resizing later.
+            self.minigame_bg_img_original_pil = Image.open("assets/minigame_background.png")
         except FileNotFoundError:
+            self.minigame_bg_img_original_pil = None
             self.minigame_canvas.config(bg="grey") # Fallback color
 
 
@@ -279,6 +277,16 @@ class RpgGui(ttk.Frame):
         self.quest_log.config(yscrollcommand=scrollbar.set)
         scrollbar.grid(row=0, column=1, sticky="ns")
         self.quest_log.config(state=tk.DISABLED)
+
+    def _resize_minigame_background(self, event):
+        """Resizes and redraws the minigame background image to fit the canvas."""
+        if self.minigame_bg_img_original_pil:
+            # Resize the original image to the new canvas size
+            resized_pil = self.minigame_bg_img_original_pil.resize((event.width, event.height))
+            # Convert to PhotoImage. Important: keep a reference!
+            self.minigame_bg_img = ImageTk.PhotoImage(resized_pil)
+            # Redraw the image on the canvas
+            self.minigame_canvas.create_image(0, 0, image=self.minigame_bg_img, anchor='nw')
 
     def _create_equipment_frame(self, parent):
         parent.columnconfigure(1, weight=1)
