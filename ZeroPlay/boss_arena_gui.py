@@ -37,8 +37,6 @@ class BossArenaWindow(tk.Toplevel):
 
         self.is_player_turn = True
         self.is_fight_over = False
-        self.is_defending = False # Track player's defense state
-
         self._setup_string_vars()
         self.create_widgets()
         self.update_display()
@@ -87,7 +85,6 @@ class BossArenaWindow(tk.Toplevel):
         action_frame.columnconfigure(1, weight=1)
         self.attack_button = ttk.Button(action_frame, text="Angriff", command=self.player_attack)
         self.attack_button.grid(row=0, column=0, padx=5, sticky="ew")
-        self.defend_button = ttk.Button(action_frame, text="Verteidigen", command=self.player_defend)
         self.defend_button.grid(row=0, column=1, padx=5, sticky="ew")
 
         # --- Log Frame ---
@@ -135,9 +132,6 @@ class BossArenaWindow(tk.Toplevel):
         self.boss_hp_bar['value'] = (self.boss.current_hp / self.boss.max_hp) * 100
 
         # Buttons
-        is_action_turn = self.is_player_turn and not self.is_fight_over
-        self.attack_button.config(state=tk.NORMAL if is_action_turn else tk.DISABLED)
-        self.defend_button.config(state=tk.NORMAL if is_action_turn else tk.DISABLED)
 
     def add_to_log(self, message):
         """Adds a message to the combat log."""
@@ -145,18 +139,6 @@ class BossArenaWindow(tk.Toplevel):
         self.log_text.insert(tk.END, message + "\n")
         self.log_text.see(tk.END)
         self.log_text.config(state=tk.DISABLED)
-
-    def player_defend(self):
-        """Handles the player's defend action."""
-        if not self.is_player_turn or self.is_fight_over:
-            return
-
-        self.is_defending = True
-        self.add_to_log("Du gehst in Verteidigungshaltung. Du erleidest halben Schaden durch den nächsten Angriff.")
-
-        self.is_player_turn = False
-        self.update_display()
-        self.after(1000, self.boss_turn)
 
     def player_attack(self):
         """Handles the player's attack action."""
@@ -196,12 +178,6 @@ class BossArenaWindow(tk.Toplevel):
             return
 
         boss_damage = self.boss.attack()
-
-        if self.is_defending:
-            boss_damage //= 2 # Halve the damage
-            self.add_to_log(f"Deine Verteidigung halbiert den Schaden auf {boss_damage}!")
-            self.is_defending = False # Reset defense state
-
         self.player.take_damage(boss_damage)
         self.add_to_log(f"{self.boss.name} greift an und fügt dir {boss_damage} Schaden zu!")
         self.update_display()

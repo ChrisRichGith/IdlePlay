@@ -230,8 +230,6 @@ class RpgGui(ttk.Frame):
         self.trader_button.pack(fill=tk.X, pady=5)
         self.blacksmith_button = ttk.Button(actions_frame, text="Schmied besuchen", command=self.open_blacksmith_window)
         self.blacksmith_button.pack(fill=tk.X, pady=5)
-        self.boss_arena_button = ttk.Button(actions_frame, text="Boss Arena", command=self.open_boss_arena_window)
-        self.boss_arena_button.pack(fill=tk.X, pady=5)
         self.equip_button = ttk.Button(actions_frame, text="Gegenstand ausrüsten", command=self.equip_item)
         self.equip_button.pack(fill=tk.X, pady=5)
         self.use_button = ttk.Button(actions_frame, text="Gegenstand benutzen", command=self.use_item)
