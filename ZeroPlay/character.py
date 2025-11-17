@@ -133,6 +133,12 @@ class Character:
         self.inventory.pop(item_index)
         return True, f"{item.name} benutzt."
 
+    def take_damage(self, damage):
+        """Reduces the character's HP by a given amount."""
+        self.current_lp -= damage
+        if self.current_lp < 0:
+            self.current_lp = 0
+
     def add_loot(self, copper, item):
         """
         Adds copper and an item to the character's inventory if there is space.
