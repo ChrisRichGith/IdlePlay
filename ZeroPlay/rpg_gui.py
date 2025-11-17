@@ -660,6 +660,12 @@ class RpgGui(ttk.Frame):
 
     def on_boss_arena_close(self):
         self.update_display()
+
+        # Check for game over condition immediately after the fight
+        if self.player.current_lp <= 0:
+            self.handle_game_over()
+            return # Stop further processing
+
         self.resume_quest_loop()
         self.update_button_states()
 
