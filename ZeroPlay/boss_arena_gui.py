@@ -8,7 +8,7 @@ import random
 from PIL import Image, ImageTk
 
 from boss import Boss
-from game_data import AVAILABLE_BOSSES
+from game_data import AVAILABLE_BOSSES, CLASSES
 from utils import center_window
 
 class BossArenaWindow(tk.Toplevel):
@@ -148,9 +148,20 @@ class BossArenaWindow(tk.Toplevel):
         if not self.is_player_turn or self.is_fight_over:
             return
 
-        # Simple damage calculation
+        # Defensive check for main_stat, especially for characters from old save files
+        if not hasattr(self.player, 'main_stat') or not self.player.main_stat:
+            self.player.main_stat = CLASSES.get(self.player.klasse, {}).get("main_stat")
+
         player_stats = self.player.get_total_stats()
         main_stat = self.player.main_stat
+
+        # Final check to prevent a crash if main_stat is still not found
+        if not main_stat or main_stat not in player_stats:
+            self.add_to_log(f"Fehler: Hauptattribut '{main_stat}' für Klasse '{self.player.klasse}' nicht gefunden!")
+            messagebox.showerror("Kritischer Fehler", "Konnte das Hauptattribut des Charakters nicht bestimmen. Kampf wird abgebrochen.", parent=self)
+            self.on_close()
+            return
+
         player_damage = random.randint(player_stats[main_stat] // 2, player_stats[main_stat])
 
         self.boss.take_damage(player_damage)
