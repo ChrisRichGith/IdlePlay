@@ -212,7 +212,7 @@ class BossArenaWindow(tk.Toplevel):
             messagebox.showinfo("Sieg!", message, parent=self)
         else:
             self.add_to_log("Du wurdest besiegt...")
-            self.player.current_lp = 1 # Restore 1 HP to avoid game over
+            # Let the main game loop handle the game over state
             messagebox.showerror("Niederlage", "Du hast den Kampf verloren!", parent=self)
 
         self.on_close()
