@@ -37,7 +37,6 @@ class BossArenaWindow(tk.Toplevel):
 
         self.is_player_turn = True
         self.is_fight_over = False
-
         self._setup_string_vars()
         self.create_widgets()
         self.update_display()
@@ -86,7 +85,6 @@ class BossArenaWindow(tk.Toplevel):
         action_frame.columnconfigure(1, weight=1)
         self.attack_button = ttk.Button(action_frame, text="Angriff", command=self.player_attack)
         self.attack_button.grid(row=0, column=0, padx=5, sticky="ew")
-        self.defend_button = ttk.Button(action_frame, text="Verteidigen (nicht impl.)", state=tk.DISABLED)
         self.defend_button.grid(row=0, column=1, padx=5, sticky="ew")
 
         # --- Log Frame ---
@@ -134,7 +132,6 @@ class BossArenaWindow(tk.Toplevel):
         self.boss_hp_bar['value'] = (self.boss.current_hp / self.boss.max_hp) * 100
 
         # Buttons
-        self.attack_button.config(state=tk.NORMAL if self.is_player_turn and not self.is_fight_over else tk.DISABLED)
 
     def add_to_log(self, message):
         """Adds a message to the combat log."""
