@@ -26,6 +26,7 @@ class Character:
         # Load base attributes and image path from the selected class
         class_data = CLASSES.get(klasse, {})
         self.attributes = class_data.get("attributes", {'Stärke': 5, 'Agilität': 5, 'Intelligenz': 5, 'Glück': 5}).copy()
+        self.main_stat = class_data.get("main_stat") # Assign main_stat
         self.image_path = class_data.get("image_path", None)  # Store the image path
         self.inventory = []
         self.max_inventory_size = 10
@@ -131,6 +132,12 @@ class Character:
 
         self.inventory.pop(item_index)
         return True, f"{item.name} benutzt."
+
+    def take_damage(self, damage):
+        """Reduces the character's HP by a given amount."""
+        self.current_lp -= damage
+        if self.current_lp < 0:
+            self.current_lp = 0
 
     def add_loot(self, copper, item):
         """
