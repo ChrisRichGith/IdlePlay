@@ -150,7 +150,8 @@ class BossArenaWindow(tk.Toplevel):
 
         # Simple damage calculation
         player_stats = self.player.get_total_stats()
-        player_damage = random.randint(player_stats['Stärke'] // 2, player_stats['Stärke'])
+        main_stat = self.player.main_stat
+        player_damage = random.randint(player_stats[main_stat] // 2, player_stats[main_stat])
 
         self.boss.take_damage(player_damage)
         self.add_to_log(f"Du greifst an und verursachst {player_damage} Schaden bei {self.boss.name}!")

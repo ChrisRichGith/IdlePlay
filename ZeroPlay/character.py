@@ -26,6 +26,7 @@ class Character:
         # Load base attributes and image path from the selected class
         class_data = CLASSES.get(klasse, {})
         self.attributes = class_data.get("attributes", {'Stärke': 5, 'Agilität': 5, 'Intelligenz': 5, 'Glück': 5}).copy()
+        self.main_stat = class_data.get("main_stat") # Assign main_stat
         self.image_path = class_data.get("image_path", None)  # Store the image path
         self.inventory = []
         self.max_inventory_size = 10
