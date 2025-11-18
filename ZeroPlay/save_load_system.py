@@ -4,6 +4,7 @@ Handles saving and loading of game states using pickle.
 """
 import os
 import pickle
+from game_data import CLASSES
 
 SAVE_DIR = "saves"
 
@@ -43,6 +44,8 @@ def load_game(character_name):
                 # Compatibility check for old saves
                 if not hasattr(character, 'resources'):
                     character.resources = {}
+                if not hasattr(character, 'main_stat'):
+                    character.main_stat = CLASSES.get(character.klasse, {}).get("main_stat")
                 return character
         except Exception as e:
             print(f"Fehler beim Laden von {character_name}: {e}")
