@@ -140,6 +140,18 @@ class BossArenaWindow(tk.Toplevel):
         self.log_text.see(tk.END)
         self.log_text.config(state=tk.DISABLED)
 
+    def player_defend(self):
+        """Handles the player's defend action."""
+        if not self.is_player_turn or self.is_fight_over:
+            return
+
+        self.is_defending = True
+        self.add_to_log("Du gehst in Verteidigungshaltung. Du erleidest halben Schaden durch den nächsten Angriff.")
+
+        self.is_player_turn = False
+        self.update_display()
+        self.after(1000, self.boss_turn)
+
     def player_attack(self):
         """Handles the player's attack action."""
         if not self.is_player_turn or self.is_fight_over:
@@ -178,6 +190,12 @@ class BossArenaWindow(tk.Toplevel):
             return
 
         boss_damage = self.boss.attack()
+
+        if self.is_defending:
+            boss_damage //= 2 # Halve the damage
+            self.add_to_log(f"Deine Verteidigung halbiert den Schaden auf {boss_damage}!")
+            self.is_defending = False # Reset defense state
+
         self.player.take_damage(boss_damage)
         self.add_to_log(f"{self.boss.name} greift an und fügt dir {boss_damage} Schaden zu!")
         self.update_display()
