@@ -13,6 +13,7 @@ from quest import Quest
 from trader import Trader
 from trader_gui import TraderWindow
 from blacksmith_gui import BlacksmithWindow
+from boss_arena_gui import BossArenaWindow
 from save_load_system import save_game
 from utils import format_currency, center_window
 from game_over_gui import GameOverWindow
@@ -229,6 +230,8 @@ class RpgGui(ttk.Frame):
         self.trader_button.pack(fill=tk.X, pady=5)
         self.blacksmith_button = ttk.Button(actions_frame, text="Schmied besuchen", command=self.open_blacksmith_window)
         self.blacksmith_button.pack(fill=tk.X, pady=5)
+        self.boss_arena_button = ttk.Button(actions_frame, text="Boss Arena", command=self.open_boss_arena_window)
+        self.boss_arena_button.pack(fill=tk.X, pady=5)
         self.equip_button = ttk.Button(actions_frame, text="Gegenstand ausrüsten", command=self.equip_item)
         self.equip_button.pack(fill=tk.X, pady=5)
         self.use_button = ttk.Button(actions_frame, text="Gegenstand benutzen", command=self.use_item)
@@ -613,6 +616,7 @@ class RpgGui(ttk.Frame):
         self.quest_button.config(state=tk.DISABLED if is_questing else tk.NORMAL)
         self.trader_button.config(state=tk.DISABLED if is_questing else tk.NORMAL)
         self.blacksmith_button.config(state=tk.DISABLED if is_questing else tk.NORMAL)
+        self.boss_arena_button.config(state=tk.DISABLED if is_questing else tk.NORMAL)
         self.auto_quest_button.config(state=tk.DISABLED if is_questing and not self.is_auto_questing else tk.NORMAL)
         if not selected_indices:
             self.equip_button.config(state=tk.DISABLED)
@@ -645,6 +649,22 @@ class RpgGui(ttk.Frame):
     def on_blacksmith_close(self):
         self.update_display()
         self.blacksmith_button.config(state=tk.NORMAL)
+
+    def open_boss_arena_window(self):
+        self.pause_quest_loop()
+        self.boss_arena_button.config(state=tk.DISABLED)
+        BossArenaWindow(self, self.player, on_close_callback=self.on_boss_arena_close)
+
+    def on_boss_arena_close(self):
+        self.update_display()
+
+        # Check for game over condition immediately after the fight
+        if self.player.current_lp <= 0:
+            self.handle_game_over()
+            return # Stop further processing
+
+        self.resume_quest_loop()
+        self.update_button_states()
 
     def handle_game_over(self):
         self.game_over = True

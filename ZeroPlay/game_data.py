@@ -115,6 +115,21 @@ ROGUE_EVENTS = [
     "Du weichst einer Falle geschickt aus.",
 ]
 
+AVAILABLE_BOSSES = [
+    {
+        "name": "Goblin König",
+        "hp": 150,
+        "damage": (10, 20),
+        "image_path": "assets/bosses/goblin_king.png"
+    },
+    {
+        "name": "Steingolem",
+        "hp": 250,
+        "damage": (5, 25),
+        "image_path": "assets/bosses/stone_golem.png"
+    },
+]
+
 # --- Components for procedural text generation ---
 
 QUEST_LOCATIONS = [
