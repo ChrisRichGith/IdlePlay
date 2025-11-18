@@ -22,16 +22,6 @@ class BossArenaWindow(tk.Toplevel):
         self.player = player
         self.on_close_callback = on_close_callback
 
-        # --- Defensive Initialization of Widgets ---
-        self.player_portrait_label = None
-        self.player_hp_bar = None
-        self.boss_portrait_label = None
-        self.boss_hp_bar = None
-        self.attack_button = None
-        self.defend_button = None
-        self.log_text = None
-        # --- End Defensive Initialization ---
-
         # Prevent the user from interacting with the main window
         self.grab_set()
         self.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -47,8 +37,6 @@ class BossArenaWindow(tk.Toplevel):
 
         self.is_player_turn = True
         self.is_fight_over = False
-        self.is_defending = False # Track player's defense state
-
         self._setup_string_vars()
         self.create_widgets()
         self.update_display()
@@ -97,7 +85,6 @@ class BossArenaWindow(tk.Toplevel):
         action_frame.columnconfigure(1, weight=1)
         self.attack_button = ttk.Button(action_frame, text="Angriff", command=self.player_attack)
         self.attack_button.grid(row=0, column=0, padx=5, sticky="ew")
-        self.defend_button = ttk.Button(action_frame, text="Verteidigen", command=self.player_defend)
         self.defend_button.grid(row=0, column=1, padx=5, sticky="ew")
 
         # --- Log Frame ---
@@ -145,9 +132,6 @@ class BossArenaWindow(tk.Toplevel):
         self.boss_hp_bar['value'] = (self.boss.current_hp / self.boss.max_hp) * 100
 
         # Buttons
-        is_action_turn = self.is_player_turn and not self.is_fight_over
-        self.attack_button.config(state=tk.NORMAL if is_action_turn else tk.DISABLED)
-        self.defend_button.config(state=tk.NORMAL if is_action_turn else tk.DISABLED)
 
     def add_to_log(self, message):
         """Adds a message to the combat log."""
