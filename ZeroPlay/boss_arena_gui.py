@@ -85,6 +85,7 @@ class BossArenaWindow(tk.Toplevel):
         action_frame.columnconfigure(1, weight=1)
         self.attack_button = ttk.Button(action_frame, text="Angriff", command=self.player_attack)
         self.attack_button.grid(row=0, column=0, padx=5, sticky="ew")
+        self.defend_button = ttk.Button(action_frame, text="Verteidigen", command=self.player_defend)
         self.defend_button.grid(row=0, column=1, padx=5, sticky="ew")
 
         # --- Log Frame ---
