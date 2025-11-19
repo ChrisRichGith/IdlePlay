@@ -22,6 +22,7 @@ class Boss:
         self.current_hp = hp
         self.damage_range = damage_range
         self.image_path = image_path
+        self.is_weakened = False
 
     def attack(self):
         """
@@ -35,11 +36,13 @@ class Boss:
     def take_damage(self, damage):
         """
         Reduces the boss's HP by a given amount.
-
-        Args:
-            damage (int): The amount of damage to take.
+        If the boss is weakened, it takes increased damage.
         """
-        self.current_hp -= damage
+        final_damage = damage
+        if self.is_weakened:
+            final_damage = int(final_damage * 1.5)  # Take 50% more damage
+
+        self.current_hp -= final_damage
         if self.current_hp < 0:
             self.current_hp = 0
 
