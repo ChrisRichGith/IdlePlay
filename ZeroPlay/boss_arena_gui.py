@@ -37,6 +37,8 @@ class BossArenaWindow(tk.Toplevel):
 
         self.is_player_turn = True
         self.is_fight_over = False
+        self.player_is_empowered = False
+        self.is_defending = False
         self._setup_string_vars()
         self.create_widgets()
         self.update_display()
@@ -85,6 +87,7 @@ class BossArenaWindow(tk.Toplevel):
         action_frame.columnconfigure(1, weight=1)
         self.attack_button = ttk.Button(action_frame, text="Angriff", command=self.player_attack)
         self.attack_button.grid(row=0, column=0, padx=5, sticky="ew")
+        self.defend_button = ttk.Button(action_frame, text="Verteidigen", command=self.player_defend)
         self.defend_button.grid(row=0, column=1, padx=5, sticky="ew")
 
         # --- Log Frame ---
@@ -97,6 +100,10 @@ class BossArenaWindow(tk.Toplevel):
         scrollbar = ttk.Scrollbar(log_frame, orient=tk.VERTICAL, command=self.log_text.yview)
         self.log_text.config(yscrollcommand=scrollbar.set)
         scrollbar.grid(row=0, column=1, sticky="ns")
+
+        # Dice roll animation label
+        self.dice_label = ttk.Label(main_frame, text="🎲", font=("Arial", 32))
+        self.dice_label.place_forget() # Hide it initially
 
         # Load images
         self.load_images()
@@ -132,6 +139,8 @@ class BossArenaWindow(tk.Toplevel):
         self.boss_hp_bar['value'] = (self.boss.current_hp / self.boss.max_hp) * 100
 
         # Buttons
+        self.attack_button.config(state=tk.NORMAL if self.is_player_turn and not self.is_fight_over else tk.DISABLED)
+        self.defend_button.config(state=tk.NORMAL if self.is_player_turn and not self.is_fight_over else tk.DISABLED)
 
     def add_to_log(self, message):
         """Adds a message to the combat log."""
@@ -140,17 +149,62 @@ class BossArenaWindow(tk.Toplevel):
         self.log_text.see(tk.END)
         self.log_text.config(state=tk.DISABLED)
 
+    def _animate_dice_roll(self, roll, callback):
+        """Animates a dice emoji and then executes the callback."""
+        self.dice_label.place(relx=0.1, rely=0.5, anchor=tk.CENTER)
+
+        start_time = 0
+        duration = 1000  # 1 second animation
+
+        def step(time_elapsed):
+            if time_elapsed >= duration:
+                self.dice_label.place_forget()
+                self.dice_label.config(text=f"{roll}")
+                self.dice_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+                self.after(500, lambda: (self.dice_label.place_forget(), callback()))
+                return
+
+            progress = time_elapsed / duration
+            self.dice_label.place(relx=0.1 + progress * 0.8, rely=0.5, anchor=tk.CENTER)
+            self.after(15, lambda: step(time_elapsed + 15))
+
+        step(start_time)
+
     def player_defend(self):
-        """Handles the player's defend action."""
+        """Handles the player's defend action with a random dice roll effect."""
         if not self.is_player_turn or self.is_fight_over:
             return
 
-        self.is_defending = True
-        self.add_to_log("Du gehst in Verteidigungshaltung. Du erleidest halben Schaden durch den nächsten Angriff.")
-
         self.is_player_turn = False
+        self.is_defending = True  # Always take half damage when defending
         self.update_display()
-        self.after(1000, self.boss_turn)
+
+        roll = random.randint(1, 4)
+
+        def handle_roll_result():
+            self.add_to_log(f"Du verteidigst dich und würfelst eine {roll}!")
+            if roll == 1:
+                # 1. Counter-attack
+                counter_damage = self.player.get_total_stats()[self.player.main_stat] // 4
+                self.add_to_log(f"Konterangriff! Du fügst dem Boss {counter_damage} Schaden zu.")
+                self.boss.take_damage(counter_damage)
+            elif roll == 2:
+                # 2. Empowered next attack
+                self.player_is_empowered = True
+                self.add_to_log("Dein nächster Angriff wird verstärkt!")
+            elif roll == 3:
+                # 3. Light heal
+                heal_amount = self.player.max_lp // 10  # Heal for 10% of max HP
+                self.player.current_lp = min(self.player.max_lp, self.player.current_lp + heal_amount)
+                self.add_to_log(f"Leichte Heilung! Du regenerierst {heal_amount} Lebenspunkte.")
+            elif roll == 4:
+                # 4. Weaken the boss
+                self.boss.is_weakened = True
+                self.add_to_log(f"{self.boss.name} ist für eine Runde geschwächt!")
+
+            self.after(1000, self.boss_turn)
+
+        self._animate_dice_roll(roll, handle_roll_result)
 
     def player_attack(self):
         """Handles the player's attack action."""
@@ -171,7 +225,15 @@ class BossArenaWindow(tk.Toplevel):
             self.on_close()
             return
 
+        if self.boss.is_weakened:
+            self.add_to_log(f"{self.boss.name} ist geschwächt und erleidet mehr Schaden!")
+
         player_damage = random.randint(player_stats[main_stat] // 2, player_stats[main_stat])
+
+        if self.player_is_empowered:
+            player_damage = int(player_damage * 1.5)
+            self.add_to_log("Verstärkter Angriff!")
+            self.player_is_empowered = False
 
         self.boss.take_damage(player_damage)
         self.add_to_log(f"Du greifst an und verursachst {player_damage} Schaden bei {self.boss.name}!")
@@ -188,6 +250,10 @@ class BossArenaWindow(tk.Toplevel):
         """Handles the boss's turn to attack."""
         if self.is_fight_over:
             return
+
+        if self.boss.is_weakened:
+            self.boss.is_weakened = False
+            self.add_to_log(f"{self.boss.name} ist nicht länger geschwächt.")
 
         boss_damage = self.boss.attack()
 
