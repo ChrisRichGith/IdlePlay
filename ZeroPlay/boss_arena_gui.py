@@ -22,16 +22,6 @@ class BossArenaWindow(tk.Toplevel):
         self.player = player
         self.on_close_callback = on_close_callback
 
-        # --- Defensive Initialization of Widgets ---
-        self.player_portrait_label = None
-        self.player_hp_bar = None
-        self.boss_portrait_label = None
-        self.boss_hp_bar = None
-        self.attack_button = None
-        self.defend_button = None
-        self.log_text = None
-        # --- End Defensive Initialization ---
-
         # Prevent the user from interacting with the main window
         self.grab_set()
         self.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -47,8 +37,6 @@ class BossArenaWindow(tk.Toplevel):
 
         self.is_player_turn = True
         self.is_fight_over = False
-        self.is_defending = False # Track player's defense state
-
         self._setup_string_vars()
         self.create_widgets()
         self.update_display()
@@ -64,73 +52,9 @@ class BossArenaWindow(tk.Toplevel):
 
     def create_widgets(self):
         """Creates and places all widgets for the arena."""
-        # --- Frame Setup ---
-        main_frame = ttk.Frame(self, padding="10")
         main_frame.columnconfigure(0, weight=1)
         main_frame.columnconfigure(1, weight=1)
         main_frame.rowconfigure(0, weight=1)
-
-        player_frame = ttk.LabelFrame(main_frame, text="Spieler", padding="10")
-        boss_frame = ttk.LabelFrame(main_frame, text="Boss", padding="10")
-        action_frame = ttk.LabelFrame(main_frame, text="Aktionen", padding="10")
-        action_frame.columnconfigure(0, weight=1)
-        action_frame.columnconfigure(1, weight=1)
-        log_frame = ttk.LabelFrame(main_frame, text="Kampflog", padding="10")
-        log_frame.columnconfigure(0, weight=1)
-        log_frame.rowconfigure(0, weight=1)
-
-        # --- Widget Instantiation ---
-        # Player widgets
-        self.player_portrait_label = ttk.Label(player_frame)
-        player_name_label = ttk.Label(player_frame, textvariable=self.player_name_var)
-        self.player_hp_bar = ttk.Progressbar(player_frame, orient='horizontal', mode='determinate')
-        player_hp_label = ttk.Label(player_frame, textvariable=self.player_hp_var)
-
-        # Boss widgets
-        self.boss_portrait_label = ttk.Label(boss_frame)
-        boss_name_label = ttk.Label(boss_frame, textvariable=self.boss_name_var)
-        self.boss_hp_bar = ttk.Progressbar(boss_frame, orient='horizontal', mode='determinate')
-        boss_hp_label = ttk.Label(boss_frame, textvariable=self.boss_hp_var)
-
-        # Action widgets
-        self.attack_button = ttk.Button(action_frame, text="Angriff", command=self.player_attack)
-        self.defend_button = ttk.Button(action_frame, text="Verteidigen", command=self.player_defend)
-
-        # Log widgets
-        self.log_text = tk.Text(log_frame, height=8, wrap=tk.WORD, state=tk.DISABLED, bg="#2B2B2B", fg="white")
-        scrollbar = ttk.Scrollbar(log_frame, orient=tk.VERTICAL, command=self.log_text.yview)
-        self.log_text.config(yscrollcommand=scrollbar.set)
-
-        # --- Layout Management ---
-        main_frame.pack(fill=tk.BOTH, expand=True)
-
-        # Frames
-        player_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 5))
-        boss_frame.grid(row=0, column=1, sticky="nsew", padx=(5, 0))
-        action_frame.grid(row=1, column=0, columnspan=2, sticky="ew", pady=10)
-        log_frame.grid(row=2, column=0, columnspan=2, sticky="ew")
-
-        # Player layout
-        self.player_portrait_label.pack()
-        player_name_label.pack(pady=5)
-        self.player_hp_bar.pack(fill=tk.X, expand=True, pady=5)
-        player_hp_label.pack()
-
-        # Boss layout
-        self.boss_portrait_label.pack()
-        boss_name_label.pack(pady=5)
-        self.boss_hp_bar.pack(fill=tk.X, expand=True, pady=5)
-        boss_hp_label.pack()
-
-        # Action layout
-        self.attack_button.grid(row=0, column=0, padx=5, sticky="ew")
-        self.defend_button.grid(row=0, column=1, padx=5, sticky="ew")
-
-        # Log layout
-        self.log_text.grid(row=0, column=0, sticky="nsew")
-        scrollbar.grid(row=0, column=1, sticky="ns")
-
-        # --- Final Steps ---
         self.load_images()
 
     def load_images(self):
@@ -164,9 +88,6 @@ class BossArenaWindow(tk.Toplevel):
         self.boss_hp_bar['value'] = (self.boss.current_hp / self.boss.max_hp) * 100
 
         # Buttons
-        is_action_turn = self.is_player_turn and not self.is_fight_over
-        self.attack_button.config(state=tk.NORMAL if is_action_turn else tk.DISABLED)
-        self.defend_button.config(state=tk.NORMAL if is_action_turn else tk.DISABLED)
 
     def add_to_log(self, message):
         """Adds a message to the combat log."""
