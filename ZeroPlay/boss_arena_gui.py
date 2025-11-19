@@ -54,58 +54,10 @@ class BossArenaWindow(tk.Toplevel):
 
     def create_widgets(self):
         """Creates and places all widgets for the arena."""
-        main_frame = ttk.Frame(self, padding="10")
-        main_frame.pack(fill=tk.BOTH, expand=True)
         main_frame.columnconfigure(0, weight=1)
         main_frame.columnconfigure(1, weight=1)
         main_frame.rowconfigure(0, weight=1)
 
-        # --- Player Frame ---
-        player_frame = ttk.LabelFrame(main_frame, text="Spieler", padding="10")
-        player_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 5))
-        self.player_portrait_label = ttk.Label(player_frame)
-        self.player_portrait_label.pack()
-        ttk.Label(player_frame, textvariable=self.player_name_var).pack(pady=5)
-        self.player_hp_bar = ttk.Progressbar(player_frame, orient='horizontal', mode='determinate')
-        self.player_hp_bar.pack(fill=tk.X, expand=True, pady=5)
-        ttk.Label(player_frame, textvariable=self.player_hp_var).pack()
-
-        # --- Boss Frame ---
-        boss_frame = ttk.LabelFrame(main_frame, text="Boss", padding="10")
-        boss_frame.grid(row=0, column=1, sticky="nsew", padx=(5, 0))
-        self.boss_portrait_label = ttk.Label(boss_frame)
-        self.boss_portrait_label.pack()
-        ttk.Label(boss_frame, textvariable=self.boss_name_var).pack(pady=5)
-        self.boss_hp_bar = ttk.Progressbar(boss_frame, orient='horizontal', mode='determinate')
-        self.boss_hp_bar.pack(fill=tk.X, expand=True, pady=5)
-        ttk.Label(boss_frame, textvariable=self.boss_hp_var).pack()
-
-        # --- Action Frame ---
-        action_frame = ttk.LabelFrame(main_frame, text="Aktionen", padding="10")
-        action_frame.grid(row=1, column=0, columnspan=2, sticky="ew", pady=10)
-        action_frame.columnconfigure(0, weight=1)
-        action_frame.columnconfigure(1, weight=1)
-        self.attack_button = ttk.Button(action_frame, text="Angriff", command=self.player_attack)
-        self.attack_button.grid(row=0, column=0, padx=5, sticky="ew")
-        self.defend_button = ttk.Button(action_frame, text="Verteidigen", command=self.player_defend)
-        self.defend_button.grid(row=0, column=1, padx=5, sticky="ew")
-
-        # --- Log Frame ---
-        log_frame = ttk.LabelFrame(main_frame, text="Kampflog", padding="10")
-        log_frame.grid(row=2, column=0, columnspan=2, sticky="ew")
-        log_frame.columnconfigure(0, weight=1)
-        log_frame.rowconfigure(0, weight=1)
-        self.log_text = tk.Text(log_frame, height=8, wrap=tk.WORD, state=tk.DISABLED, bg="#2B2B2B", fg="white")
-        self.log_text.grid(row=0, column=0, sticky="nsew")
-        scrollbar = ttk.Scrollbar(log_frame, orient=tk.VERTICAL, command=self.log_text.yview)
-        self.log_text.config(yscrollcommand=scrollbar.set)
-        scrollbar.grid(row=0, column=1, sticky="ns")
-
-        # Dice roll animation label
-        self.dice_label = ttk.Label(main_frame, text="🎲", font=("Arial", 32))
-        self.dice_label.place_forget() # Hide it initially
-
-        # Load images
         self.load_images()
 
     def load_images(self):
