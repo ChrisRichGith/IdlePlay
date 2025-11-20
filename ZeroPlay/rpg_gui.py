@@ -92,6 +92,7 @@ class RpgGui(ttk.Frame):
         self.is_auto_questing = False
         self.game_over = False
         self.quest_loop_id = None # To hold the .after() job ID
+        self.minigame_loop_id = None # To hold the .after() job ID for the minigame
 
         # Minigame state
         self.minigame_orbs = {}
@@ -441,12 +442,22 @@ class RpgGui(ttk.Frame):
             # Reset spawn timer to spawn an orb relatively quickly
             self.last_orb_spawn_time = 0
             self.next_orb_spawn_delay = random.uniform(0.5, 1.5)
+            self.run_minigame_loop() # Start the independent loop
         else:
             self.minigame_toggle_button.config(text="Ressourcenjagd starten")
+            # Stop the independent loop
+            if self.minigame_loop_id:
+                self.master.after_cancel(self.minigame_loop_id)
+                self.minigame_loop_id = None
             # Clear existing orbs
             for orb_id in list(self.minigame_orbs.keys()):
                 self.minigame_canvas.delete(orb_id)
             self.minigame_orbs.clear()
+
+    def run_minigame_loop(self):
+        """The main loop for the minigame, independent of the quest loop."""
+        self.update_minigame()
+        self.minigame_loop_id = self.master.after(150, self.run_minigame_loop)
 
     def start_quest(self):
         if self.current_quest:
@@ -485,7 +496,7 @@ class RpgGui(ttk.Frame):
 
     def update_minigame(self):
         # Stop minigame updates if it's not supposed to be running
-        if not self.minigame_running or self.current_quest is None:
+        if not self.minigame_running:
             return
 
         now = time.time()
@@ -539,8 +550,6 @@ class RpgGui(ttk.Frame):
 
     def advance_quest(self):
         if self.current_quest is None: return
-
-        self.update_minigame() # Update the minigame on each tick
 
         old_phase = self.current_quest.phase
         event_message = self.current_quest.advance(self.player)
@@ -644,7 +653,7 @@ class RpgGui(ttk.Frame):
         self.blacksmith_button.config(state=tk.DISABLED if is_questing else tk.NORMAL)
         self.boss_arena_button.config(state=tk.DISABLED if is_questing else tk.NORMAL)
         self.auto_quest_button.config(state=tk.DISABLED if is_questing and not self.is_auto_questing else tk.NORMAL)
-        self.minigame_toggle_button.config(state=tk.NORMAL if is_questing else tk.DISABLED)
+        self.minigame_toggle_button.config(state=tk.NORMAL) # Keep the button always enabled
         if not selected_indices:
             self.equip_button.config(state=tk.DISABLED)
             self.use_button.config(state=tk.DISABLED)
