@@ -97,6 +97,7 @@ class RpgGui(ttk.Frame):
         self.minigame_orbs = {}
         self.last_orb_spawn_time = 0
         self.next_orb_spawn_delay = random.uniform(2, 5)
+        self.minigame_running = False # Initial state for the minigame
 
         self._setup_string_vars()
         self.create_widgets()
@@ -253,6 +254,10 @@ class RpgGui(ttk.Frame):
         # Minigame Canvas
         minigame_frame = ttk.LabelFrame(actions_frame, text="Ressourcenjagd", padding="5")
         minigame_frame.pack(fill=tk.X, pady=(10, 0), expand=True)
+
+        self.minigame_toggle_button = ttk.Button(minigame_frame, text="Ressourcenjagd starten", command=self.toggle_minigame)
+        self.minigame_toggle_button.pack(fill=tk.X, pady=(0, 5))
+
         self.minigame_canvas = tk.Canvas(minigame_frame, width=240, height=300, relief="sunken", borderwidth=1)
         self.minigame_canvas.pack(expand=True, fill=tk.BOTH)
         self.minigame_canvas.bind("<Configure>", self._resize_minigame_background)
@@ -428,6 +433,21 @@ class RpgGui(ttk.Frame):
             self.auto_quest_button.config(text="Auto-Quest starten")
             self.set_loot_text("Auto-Quest Modus gestoppt.")
 
+    def toggle_minigame(self):
+        """Starts or stops the resource hunt minigame."""
+        self.minigame_running = not self.minigame_running
+        if self.minigame_running:
+            self.minigame_toggle_button.config(text="Ressourcenjagd beenden")
+            # Reset spawn timer to spawn an orb relatively quickly
+            self.last_orb_spawn_time = 0
+            self.next_orb_spawn_delay = random.uniform(0.5, 1.5)
+        else:
+            self.minigame_toggle_button.config(text="Ressourcenjagd starten")
+            # Clear existing orbs
+            for orb_id in list(self.minigame_orbs.keys()):
+                self.minigame_canvas.delete(orb_id)
+            self.minigame_orbs.clear()
+
     def start_quest(self):
         if self.current_quest:
             if not self.is_auto_questing:
@@ -464,7 +484,9 @@ class RpgGui(ttk.Frame):
         self.advance_quest()
 
     def update_minigame(self):
-        if self.current_quest is None: return
+        # Stop minigame updates if it's not supposed to be running
+        if not self.minigame_running or self.current_quest is None:
+            return
 
         now = time.time()
         # Remove old orbs
@@ -557,6 +579,10 @@ class RpgGui(ttk.Frame):
             self.current_quest = None
             self.progress_bar['value'] = 0
 
+            # Stop the minigame if it's running
+            if self.minigame_running:
+                self.toggle_minigame()
+
             # Bild nach Quest-Abschluss auf Platzhalter zurücksetzen
             self.quest_image_label.config(image=self.placeholder_image)
             self.quest_image_label.image = self.placeholder_image
@@ -618,6 +644,7 @@ class RpgGui(ttk.Frame):
         self.blacksmith_button.config(state=tk.DISABLED if is_questing else tk.NORMAL)
         self.boss_arena_button.config(state=tk.DISABLED if is_questing else tk.NORMAL)
         self.auto_quest_button.config(state=tk.DISABLED if is_questing and not self.is_auto_questing else tk.NORMAL)
+        self.minigame_toggle_button.config(state=tk.NORMAL if is_questing else tk.DISABLED)
         if not selected_indices:
             self.equip_button.config(state=tk.DISABLED)
             self.use_button.config(state=tk.DISABLED)

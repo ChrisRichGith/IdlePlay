@@ -54,8 +54,6 @@ class BossArenaWindow(tk.Toplevel):
 
     def create_widgets(self):
         """Creates and places all widgets for the arena."""
-        main_frame = ttk.Frame(self, padding="10")
-        main_frame.pack(fill=tk.BOTH, expand=True)
         main_frame.columnconfigure(0, weight=1)
         main_frame.columnconfigure(1, weight=1)
         main_frame.rowconfigure(0, weight=1)
