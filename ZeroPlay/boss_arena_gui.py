@@ -247,7 +247,6 @@ class BossArenaWindow(tk.Toplevel):
 
         if self.boss.is_weakened:
             self.add_to_log(f"{self.boss.name} ist geschwächt und erleidet mehr Schaden!")
-            self.boss.is_weakened = False
 
         player_damage = random.randint(player_stats[main_stat] // 2, player_stats[main_stat])
 
@@ -271,6 +270,10 @@ class BossArenaWindow(tk.Toplevel):
         """Handles the boss's turn to attack."""
         if self.is_fight_over:
             return
+
+        if self.boss.is_weakened:
+            self.boss.is_weakened = False
+            self.add_to_log(f"{self.boss.name} ist nicht länger geschwächt.")
 
         boss_damage = self.boss.attack()
 
