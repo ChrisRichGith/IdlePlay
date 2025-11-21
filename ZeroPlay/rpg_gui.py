@@ -92,11 +92,13 @@ class RpgGui(ttk.Frame):
         self.is_auto_questing = False
         self.game_over = False
         self.quest_loop_id = None # To hold the .after() job ID
+        self.minigame_loop_id = None # To hold the .after() job ID for the minigame
 
         # Minigame state
         self.minigame_orbs = {}
         self.last_orb_spawn_time = 0
         self.next_orb_spawn_delay = random.uniform(2, 5)
+        self.minigame_running = False # Initial state for the minigame
 
         self._setup_string_vars()
         self.create_widgets()
@@ -253,6 +255,10 @@ class RpgGui(ttk.Frame):
         # Minigame Canvas
         minigame_frame = ttk.LabelFrame(actions_frame, text="Ressourcenjagd", padding="5")
         minigame_frame.pack(fill=tk.X, pady=(10, 0), expand=True)
+
+        self.minigame_toggle_button = ttk.Button(minigame_frame, text="Ressourcenjagd starten", command=self.toggle_minigame)
+        self.minigame_toggle_button.pack(fill=tk.X, pady=(0, 5))
+
         self.minigame_canvas = tk.Canvas(minigame_frame, width=240, height=300, relief="sunken", borderwidth=1)
         self.minigame_canvas.pack(expand=True, fill=tk.BOTH)
         self.minigame_canvas.bind("<Configure>", self._resize_minigame_background)
@@ -428,6 +434,31 @@ class RpgGui(ttk.Frame):
             self.auto_quest_button.config(text="Auto-Quest starten")
             self.set_loot_text("Auto-Quest Modus gestoppt.")
 
+    def toggle_minigame(self):
+        """Starts or stops the resource hunt minigame."""
+        self.minigame_running = not self.minigame_running
+        if self.minigame_running:
+            self.minigame_toggle_button.config(text="Ressourcenjagd beenden")
+            # Reset spawn timer to spawn an orb relatively quickly
+            self.last_orb_spawn_time = 0
+            self.next_orb_spawn_delay = random.uniform(0.5, 1.5)
+            self.run_minigame_loop() # Start the independent loop
+        else:
+            self.minigame_toggle_button.config(text="Ressourcenjagd starten")
+            # Stop the independent loop
+            if self.minigame_loop_id:
+                self.master.after_cancel(self.minigame_loop_id)
+                self.minigame_loop_id = None
+            # Clear existing orbs
+            for orb_id in list(self.minigame_orbs.keys()):
+                self.minigame_canvas.delete(orb_id)
+            self.minigame_orbs.clear()
+
+    def run_minigame_loop(self):
+        """The main loop for the minigame, independent of the quest loop."""
+        self.update_minigame()
+        self.minigame_loop_id = self.master.after(150, self.run_minigame_loop)
+
     def start_quest(self):
         if self.current_quest:
             if not self.is_auto_questing:
@@ -464,7 +495,9 @@ class RpgGui(ttk.Frame):
         self.advance_quest()
 
     def update_minigame(self):
-        if self.current_quest is None: return
+        # Stop minigame updates if it's not supposed to be running
+        if not self.minigame_running:
+            return
 
         now = time.time()
         # Remove old orbs
@@ -509,16 +542,63 @@ class RpgGui(ttk.Frame):
 
     def on_orb_click(self, orb_id):
         if orb_id in self.minigame_orbs:
+            # Prevent double-clicking
+            self.minigame_canvas.tag_unbind(orb_id, "<Button-1>")
+
             resource = self.minigame_orbs[orb_id]['resource']
             self.player.add_resource(resource, 1)
-            self.minigame_canvas.delete(orb_id)
+
+            # Start animation
+            self._animate_resource_collection(orb_id)
+
             del self.minigame_orbs[orb_id]
-            self.update_display()
+            # Update is now called at the end of the animation
+            # self.update_display()
+
+    def _animate_resource_collection(self, orb_id):
+        """Animates the orb flying towards the resource counter."""
+        start_x, start_y = self.minigame_canvas.coords(orb_id)
+
+        # Get target coordinates relative to the main window
+        target_x_abs = self.resources_label.winfo_rootx() + self.resources_label.winfo_width() // 2
+        target_y_abs = self.resources_label.winfo_rooty()
+
+        # Convert target coordinates to be relative to the canvas
+        canvas_x_abs = self.minigame_canvas.winfo_rootx()
+        canvas_y_abs = self.minigame_canvas.winfo_rooty()
+
+        end_x = target_x_abs - canvas_x_abs
+        end_y = target_y_abs - canvas_y_abs
+
+        start_time = time.time()
+        duration = 0.5  # 500ms animation
+        initial_font_size = 14
+
+        def animation_step():
+            elapsed = time.time() - start_time
+            progress = min(elapsed / duration, 1.0)
+
+            # Linear interpolation for position
+            new_x = start_x + (end_x - start_x) * progress
+            new_y = start_y + (end_y - start_y) * progress
+            self.minigame_canvas.coords(orb_id, new_x, new_y)
+
+            # "Zoom out" by reducing font size
+            new_font_size = int(initial_font_size * (1 - progress))
+            if new_font_size > 0:
+                self.minigame_canvas.itemconfig(orb_id, font=("", new_font_size))
+
+            if progress < 1.0:
+                self.after(15, animation_step)
+            else:
+                self.minigame_canvas.delete(orb_id)
+                self.update_display() # Update display after animation completes
+
+        animation_step()
+
 
     def advance_quest(self):
         if self.current_quest is None: return
-
-        self.update_minigame() # Update the minigame on each tick
 
         old_phase = self.current_quest.phase
         event_message = self.current_quest.advance(self.player)
@@ -618,6 +698,7 @@ class RpgGui(ttk.Frame):
         self.blacksmith_button.config(state=tk.DISABLED if is_questing else tk.NORMAL)
         self.boss_arena_button.config(state=tk.DISABLED if is_questing else tk.NORMAL)
         self.auto_quest_button.config(state=tk.DISABLED if is_questing and not self.is_auto_questing else tk.NORMAL)
+        self.minigame_toggle_button.config(state=tk.NORMAL) # Keep the button always enabled
         if not selected_indices:
             self.equip_button.config(state=tk.DISABLED)
             self.use_button.config(state=tk.DISABLED)
