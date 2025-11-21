@@ -176,7 +176,7 @@ class BossArenaWindow(tk.Toplevel):
         self.dice_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
         start_time = time.time()
-        duration = 0.3  # 300ms for zoom-in
+        duration = 0.6  # 600ms for zoom-in
 
         def zoom_step():
             elapsed = time.time() - start_time
