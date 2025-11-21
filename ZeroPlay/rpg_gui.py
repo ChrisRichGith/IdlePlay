@@ -588,10 +588,6 @@ class RpgGui(ttk.Frame):
             self.current_quest = None
             self.progress_bar['value'] = 0
 
-            # Stop the minigame if it's running
-            if self.minigame_running:
-                self.toggle_minigame()
-
             # Bild nach Quest-Abschluss auf Platzhalter zurücksetzen
             self.quest_image_label.config(image=self.placeholder_image)
             self.quest_image_label.image = self.placeholder_image

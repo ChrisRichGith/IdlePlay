@@ -170,25 +170,31 @@ class BossArenaWindow(tk.Toplevel):
         self.log_text.config(state=tk.DISABLED)
 
     def _animate_dice_roll(self, roll, callback):
-        """Animates a dice emoji and then executes the callback."""
-        self.dice_label.place(relx=0.1, rely=0.5, anchor=tk.CENTER)
+        """Animates a dice emoji with a zoom effect."""
+        self.dice_label.config(text="🎲", font=("", 1))
+        self.dice_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
-        start_time = 0
-        duration = 1000  # 1 second animation
+        start_time = time.time()
+        duration = 0.3  # 300ms for zoom-in
 
-        def step(time_elapsed):
-            if time_elapsed >= duration:
+        def zoom_step():
+            elapsed = time.time() - start_time
+            progress = min(elapsed / duration, 1.0)
+
+            # Animate font size from 1 to 72
+            font_size = int(1 + progress * 71)
+            self.dice_label.config(font=("", font_size))
+
+            if progress < 1.0:
+                self.after(15, zoom_step)
+            else:
+                # After zoom, hide dice, show number, then call callback
                 self.dice_label.place_forget()
-                self.dice_label.config(text=f"{roll}")
+                self.dice_label.config(text=f"{roll}", font=("", 48))
                 self.dice_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
-                self.after(500, lambda: (self.dice_label.place_forget(), callback()))
-                return
+                self.after(700, lambda: (self.dice_label.place_forget(), callback()))
 
-            progress = time_elapsed / duration
-            self.dice_label.place(relx=0.1 + progress * 0.8, rely=0.5, anchor=tk.CENTER)
-            self.after(15, lambda: step(time_elapsed + 15))
-
-        step(start_time)
+        zoom_step()
 
     def player_defend(self):
         """Handles the player's defend action with a random dice roll effect."""
@@ -247,6 +253,7 @@ class BossArenaWindow(tk.Toplevel):
 
         if self.boss.is_weakened:
             self.add_to_log(f"{self.boss.name} ist geschwächt und erleidet mehr Schaden!")
+            self.boss.is_weakened = False
 
         player_damage = random.randint(player_stats[main_stat] // 2, player_stats[main_stat])
 
@@ -270,10 +277,6 @@ class BossArenaWindow(tk.Toplevel):
         """Handles the boss's turn to attack."""
         if self.is_fight_over:
             return
-
-        if self.boss.is_weakened:
-            self.boss.is_weakened = False
-            self.add_to_log(f"{self.boss.name} ist nicht länger geschwächt.")
 
         boss_damage = self.boss.attack()
 
