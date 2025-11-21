@@ -5,6 +5,7 @@ Defines the GUI for the boss arena.
 import tkinter as tk
 from tkinter import ttk, messagebox
 import random
+import time
 from PIL import Image, ImageTk
 
 from boss import Boss
