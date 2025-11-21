@@ -541,58 +541,74 @@ class RpgGui(ttk.Frame):
                 self.next_orb_spawn_delay = random.uniform(2, 5)
 
     def on_orb_click(self, orb_id):
+        """Handles the click on a resource orb."""
         if orb_id in self.minigame_orbs:
-            # Prevent double-clicking
-            self.minigame_canvas.tag_unbind(orb_id, "<Button-1>")
+            # Immediately get all info and then remove the orb from the canvas and dict
+            # to prevent any race conditions or double-clicks.
+            resource_data = self.minigame_orbs.pop(orb_id)
+            symbol = self.minigame_canvas.itemcget(orb_id, 'text')
+            start_coords_canvas = self.minigame_canvas.coords(orb_id)
+            self.minigame_canvas.delete(orb_id)
 
-            resource = self.minigame_orbs[orb_id]['resource']
-            self.player.add_resource(resource, 1)
+            # Add the resource to the player's inventory
+            self.player.add_resource(resource_data['resource'], 1)
 
-            # Start animation
-            self._animate_resource_collection(orb_id)
+            # Start the top-level animation
+            self._animate_resource_collection(symbol, start_coords_canvas)
 
-            del self.minigame_orbs[orb_id]
-            # Update is now called at the end of the animation
-            # self.update_display()
+    def _animate_resource_collection(self, symbol, start_coords_canvas):
+        """Animates the resource symbol flying on a top-level window."""
+        # 1. Create a frameless Toplevel window for the animation
+        anim_window = tk.Toplevel(self)
+        anim_window.overrideredirect(True)
+        # Use a transparent color; this works on Windows and some Linux WMs.
+        # A solid color like 'black' is used for the label bg as a fallback.
+        try:
+            anim_window.attributes('-transparentcolor', 'black')
+        except tk.TclError:
+            pass  # This feature is not supported on all platforms.
 
-    def _animate_resource_collection(self, orb_id):
-        """Animates the orb flying towards the resource counter."""
-        start_x, start_y = self.minigame_canvas.coords(orb_id)
+        # 2. Create the label with the symbol inside the Toplevel
+        initial_font_size = 14
+        anim_label = ttk.Label(anim_window, text=symbol, font=("", initial_font_size),
+                               background='black', foreground='white')
+        anim_label.pack()
 
-        # Get target coordinates relative to the main window
-        target_x_abs = self.resources_label.winfo_rootx() + self.resources_label.winfo_width() // 2
-        target_y_abs = self.resources_label.winfo_rooty()
-
-        # Convert target coordinates to be relative to the canvas
+        # 3. Calculate absolute start and end screen coordinates
         canvas_x_abs = self.minigame_canvas.winfo_rootx()
         canvas_y_abs = self.minigame_canvas.winfo_rooty()
+        start_x = canvas_x_abs + start_coords_canvas[0]
+        start_y = canvas_y_abs + start_coords_canvas[1]
 
-        end_x = target_x_abs - canvas_x_abs
-        end_y = target_y_abs - canvas_y_abs
+        end_x = self.resources_label.winfo_rootx() + self.resources_label.winfo_width() // 2
+        end_y = self.resources_label.winfo_rooty()
+
+        # 4. Position the window at the start and lift it to the top
+        anim_window.geometry(f"+{int(start_x)}+{int(start_y)}")
+        anim_window.lift()
 
         start_time = time.time()
-        duration = 0.5  # 500ms animation
-        initial_font_size = 14
+        duration = 0.8  # Use the already adjusted duration
 
         def animation_step():
             elapsed = time.time() - start_time
             progress = min(elapsed / duration, 1.0)
 
-            # Linear interpolation for position
+            # Interpolate the window's position
             new_x = start_x + (end_x - start_x) * progress
             new_y = start_y + (end_y - start_y) * progress
-            self.minigame_canvas.coords(orb_id, new_x, new_y)
+            anim_window.geometry(f"+{int(new_x)}+{int(new_y)}")
 
-            # "Zoom out" by reducing font size
+            # Interpolate the font size for the zoom-out effect
             new_font_size = int(initial_font_size * (1 - progress))
-            if new_font_size > 0:
-                self.minigame_canvas.itemconfig(orb_id, font=("", new_font_size))
+            if new_font_size > 1:
+                anim_label.config(font=("", new_font_size))
 
             if progress < 1.0:
-                self.after(15, animation_step)
+                self.after(20, animation_step)
             else:
-                self.minigame_canvas.delete(orb_id)
-                self.update_display() # Update display after animation completes
+                anim_window.destroy()
+                self.update_display()  # Update the counter at the very end
 
         animation_step()
 
