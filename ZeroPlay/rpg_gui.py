@@ -92,11 +92,13 @@ class RpgGui(ttk.Frame):
         self.is_auto_questing = False
         self.game_over = False
         self.quest_loop_id = None # To hold the .after() job ID
+        self.minigame_loop_id = None # To hold the .after() job ID for the minigame
 
         # Minigame state
         self.minigame_orbs = {}
         self.last_orb_spawn_time = 0
         self.next_orb_spawn_delay = random.uniform(2, 5)
+        self.minigame_running = False # Initial state for the minigame
 
         self._setup_string_vars()
         self.create_widgets()
@@ -253,6 +255,10 @@ class RpgGui(ttk.Frame):
         # Minigame Canvas
         minigame_frame = ttk.LabelFrame(actions_frame, text="Ressourcenjagd", padding="5")
         minigame_frame.pack(fill=tk.X, pady=(10, 0), expand=True)
+
+        self.minigame_toggle_button = ttk.Button(minigame_frame, text="Ressourcenjagd starten", command=self.toggle_minigame)
+        self.minigame_toggle_button.pack(fill=tk.X, pady=(0, 5))
+
         self.minigame_canvas = tk.Canvas(minigame_frame, width=240, height=300, relief="sunken", borderwidth=1)
         self.minigame_canvas.pack(expand=True, fill=tk.BOTH)
         self.minigame_canvas.bind("<Configure>", self._resize_minigame_background)
@@ -428,6 +434,31 @@ class RpgGui(ttk.Frame):
             self.auto_quest_button.config(text="Auto-Quest starten")
             self.set_loot_text("Auto-Quest Modus gestoppt.")
 
+    def toggle_minigame(self):
+        """Starts or stops the resource hunt minigame."""
+        self.minigame_running = not self.minigame_running
+        if self.minigame_running:
+            self.minigame_toggle_button.config(text="Ressourcenjagd beenden")
+            # Reset spawn timer to spawn an orb relatively quickly
+            self.last_orb_spawn_time = 0
+            self.next_orb_spawn_delay = random.uniform(0.5, 1.5)
+            self.run_minigame_loop() # Start the independent loop
+        else:
+            self.minigame_toggle_button.config(text="Ressourcenjagd starten")
+            # Stop the independent loop
+            if self.minigame_loop_id:
+                self.master.after_cancel(self.minigame_loop_id)
+                self.minigame_loop_id = None
+            # Clear existing orbs
+            for orb_id in list(self.minigame_orbs.keys()):
+                self.minigame_canvas.delete(orb_id)
+            self.minigame_orbs.clear()
+
+    def run_minigame_loop(self):
+        """The main loop for the minigame, independent of the quest loop."""
+        self.update_minigame()
+        self.minigame_loop_id = self.master.after(150, self.run_minigame_loop)
+
     def start_quest(self):
         if self.current_quest:
             if not self.is_auto_questing:
@@ -464,7 +495,9 @@ class RpgGui(ttk.Frame):
         self.advance_quest()
 
     def update_minigame(self):
-        if self.current_quest is None: return
+        # Stop minigame updates if it's not supposed to be running
+        if not self.minigame_running:
+            return
 
         now = time.time()
         # Remove old orbs
@@ -508,17 +541,80 @@ class RpgGui(ttk.Frame):
                 self.next_orb_spawn_delay = random.uniform(2, 5)
 
     def on_orb_click(self, orb_id):
+        """Handles the click on a resource orb."""
         if orb_id in self.minigame_orbs:
-            resource = self.minigame_orbs[orb_id]['resource']
-            self.player.add_resource(resource, 1)
+            # Immediately get all info and then remove the orb from the canvas and dict
+            # to prevent any race conditions or double-clicks.
+            resource_data = self.minigame_orbs.pop(orb_id)
+            symbol = self.minigame_canvas.itemcget(orb_id, 'text')
+            start_coords_canvas = self.minigame_canvas.coords(orb_id)
             self.minigame_canvas.delete(orb_id)
-            del self.minigame_orbs[orb_id]
-            self.update_display()
+
+            # Add the resource to the player's inventory
+            self.player.add_resource(resource_data['resource'], 1)
+
+            # Start the top-level animation
+            self._animate_resource_collection(symbol, start_coords_canvas)
+
+    def _animate_resource_collection(self, symbol, start_coords_canvas):
+        """Animates the resource symbol flying on a top-level window."""
+        # 1. Create a frameless Toplevel window for the animation
+        anim_window = tk.Toplevel(self)
+        anim_window.overrideredirect(True)
+        # Use a transparent color; this works on Windows and some Linux WMs.
+        # A solid color like 'black' is used for the label bg as a fallback.
+        try:
+            anim_window.attributes('-transparentcolor', 'black')
+        except tk.TclError:
+            pass  # This feature is not supported on all platforms.
+
+        # 2. Create the label with the symbol inside the Toplevel
+        initial_font_size = 14
+        anim_label = ttk.Label(anim_window, text=symbol, font=("", initial_font_size),
+                               background='black', foreground='white')
+        anim_label.pack()
+
+        # 3. Calculate absolute start and end screen coordinates
+        canvas_x_abs = self.minigame_canvas.winfo_rootx()
+        canvas_y_abs = self.minigame_canvas.winfo_rooty()
+        start_x = canvas_x_abs + start_coords_canvas[0]
+        start_y = canvas_y_abs + start_coords_canvas[1]
+
+        end_x = self.resources_label.winfo_rootx() + self.resources_label.winfo_width() // 2
+        end_y = self.resources_label.winfo_rooty()
+
+        # 4. Position the window at the start and lift it to the top
+        anim_window.geometry(f"+{int(start_x)}+{int(start_y)}")
+        anim_window.lift()
+
+        start_time = time.time()
+        duration = 0.8  # Use the already adjusted duration
+
+        def animation_step():
+            elapsed = time.time() - start_time
+            progress = min(elapsed / duration, 1.0)
+
+            # Interpolate the window's position
+            new_x = start_x + (end_x - start_x) * progress
+            new_y = start_y + (end_y - start_y) * progress
+            anim_window.geometry(f"+{int(new_x)}+{int(new_y)}")
+
+            # Interpolate the font size for the zoom-out effect
+            new_font_size = int(initial_font_size * (1 - progress))
+            if new_font_size > 1:
+                anim_label.config(font=("", new_font_size))
+
+            if progress < 1.0:
+                self.after(20, animation_step)
+            else:
+                anim_window.destroy()
+                self.update_display()  # Update the counter at the very end
+
+        animation_step()
+
 
     def advance_quest(self):
         if self.current_quest is None: return
-
-        self.update_minigame() # Update the minigame on each tick
 
         old_phase = self.current_quest.phase
         event_message = self.current_quest.advance(self.player)
@@ -618,6 +714,7 @@ class RpgGui(ttk.Frame):
         self.blacksmith_button.config(state=tk.DISABLED if is_questing else tk.NORMAL)
         self.boss_arena_button.config(state=tk.DISABLED if is_questing else tk.NORMAL)
         self.auto_quest_button.config(state=tk.DISABLED if is_questing and not self.is_auto_questing else tk.NORMAL)
+        self.minigame_toggle_button.config(state=tk.NORMAL) # Keep the button always enabled
         if not selected_indices:
             self.equip_button.config(state=tk.DISABLED)
             self.use_button.config(state=tk.DISABLED)

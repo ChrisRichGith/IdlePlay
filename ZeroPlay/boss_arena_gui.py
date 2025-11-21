@@ -5,6 +5,7 @@ Defines the GUI for the boss arena.
 import tkinter as tk
 from tkinter import ttk, messagebox
 import random
+import time
 from PIL import Image, ImageTk
 
 from boss import Boss
@@ -54,9 +55,77 @@ class BossArenaWindow(tk.Toplevel):
 
     def create_widgets(self):
         """Creates and places all widgets for the arena."""
-        main_frame.columnconfigure(0, weight=1)
-        main_frame.columnconfigure(1, weight=1)
+        # Main container frame
+        main_frame = ttk.Frame(self, padding="10")
+        main_frame.pack(fill=tk.BOTH, expand=True)
+
+        main_frame.columnconfigure(0, weight=1, uniform="group1")
+        main_frame.columnconfigure(1, weight=2, uniform="group1") # Log in the middle
+        main_frame.columnconfigure(2, weight=1, uniform="group1")
         main_frame.rowconfigure(0, weight=1)
+
+        # --- Player Frame (Left) ---
+        player_frame = ttk.LabelFrame(main_frame, text="Spieler", padding="10")
+        player_frame.grid(row=0, column=0, sticky="nsew", padx=5)
+        player_frame.columnconfigure(0, weight=1)
+        player_frame.rowconfigure(1, weight=1) # Make portrait area expand
+
+        ttk.Label(player_frame, textvariable=self.player_name_var).pack(pady=5)
+        self.player_portrait_label = ttk.Label(player_frame)
+        self.player_portrait_label.pack(pady=5, expand=True)
+        ttk.Label(player_frame, textvariable=self.player_hp_var).pack()
+        self.player_hp_bar = ttk.Progressbar(player_frame, orient='horizontal', mode='determinate')
+        self.player_hp_bar.pack(fill=tk.X, padx=5, pady=5)
+
+
+        # --- Middle Frame (Log and Actions) ---
+        middle_frame = ttk.Frame(main_frame)
+        middle_frame.grid(row=0, column=1, sticky="nsew", padx=5)
+        middle_frame.rowconfigure(0, weight=3) # Log gets more space
+        middle_frame.rowconfigure(1, weight=1) # Actions
+        middle_frame.columnconfigure(0, weight=1)
+
+        # Combat Log
+        log_frame = ttk.LabelFrame(middle_frame, text="Kampflog", padding="5")
+        log_frame.grid(row=0, column=0, sticky="nsew")
+        log_frame.rowconfigure(0, weight=1)
+        log_frame.columnconfigure(0, weight=1)
+
+        self.log_text = tk.Text(log_frame, height=15, wrap=tk.WORD, bg="#2B2B2B", fg="white", relief="flat")
+        self.log_text.grid(row=0, column=0, sticky="nsew")
+        scrollbar = ttk.Scrollbar(log_frame, orient=tk.VERTICAL, command=self.log_text.yview)
+        self.log_text.config(yscrollcommand=scrollbar.set)
+        scrollbar.grid(row=0, column=1, sticky="ns")
+        self.log_text.config(state=tk.DISABLED)
+        self.add_to_log(f"Ein wilder {self.boss.name} erscheint!")
+
+        # Action Buttons
+        actions_frame = ttk.LabelFrame(middle_frame, text="Aktionen", padding="10")
+        actions_frame.grid(row=1, column=0, sticky="nsew", pady=(10, 0))
+        actions_frame.columnconfigure(0, weight=1)
+        actions_frame.columnconfigure(1, weight=1)
+
+        self.attack_button = ttk.Button(actions_frame, text="Angreifen", command=self.player_attack)
+        self.attack_button.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
+        self.defend_button = ttk.Button(actions_frame, text="Verteidigen", command=self.player_defend)
+        self.defend_button.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+
+        # Dice label for animation (initially hidden)
+        self.dice_label = ttk.Label(self, text="🎲", font=("", 36))
+
+
+        # --- Boss Frame (Right) ---
+        boss_frame = ttk.LabelFrame(main_frame, text="Boss", padding="10")
+        boss_frame.grid(row=0, column=2, sticky="nsew", padx=5)
+        boss_frame.columnconfigure(0, weight=1)
+        boss_frame.rowconfigure(1, weight=1) # Make portrait area expand
+
+        ttk.Label(boss_frame, textvariable=self.boss_name_var).pack(pady=5)
+        self.boss_portrait_label = ttk.Label(boss_frame)
+        self.boss_portrait_label.pack(pady=5, expand=True)
+        ttk.Label(boss_frame, textvariable=self.boss_hp_var).pack()
+        self.boss_hp_bar = ttk.Progressbar(boss_frame, orient='horizontal', mode='determinate')
+        self.boss_hp_bar.pack(fill=tk.X, padx=5, pady=5)
 
         self.load_images()
 
@@ -102,25 +171,31 @@ class BossArenaWindow(tk.Toplevel):
         self.log_text.config(state=tk.DISABLED)
 
     def _animate_dice_roll(self, roll, callback):
-        """Animates a dice emoji and then executes the callback."""
-        self.dice_label.place(relx=0.1, rely=0.5, anchor=tk.CENTER)
+        """Animates a dice emoji with a zoom effect."""
+        self.dice_label.config(text="🎲", font=("", 1))
+        self.dice_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
-        start_time = 0
-        duration = 1000  # 1 second animation
+        start_time = time.time()
+        duration = 0.6  # 600ms for zoom-in
 
-        def step(time_elapsed):
-            if time_elapsed >= duration:
+        def zoom_step():
+            elapsed = time.time() - start_time
+            progress = min(elapsed / duration, 1.0)
+
+            # Animate font size from 1 to 72
+            font_size = int(1 + progress * 71)
+            self.dice_label.config(font=("", font_size))
+
+            if progress < 1.0:
+                self.after(15, zoom_step)
+            else:
+                # After zoom, hide dice, show number, then call callback
                 self.dice_label.place_forget()
-                self.dice_label.config(text=f"{roll}")
+                self.dice_label.config(text=f"{roll}", font=("", 48))
                 self.dice_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
-                self.after(500, lambda: (self.dice_label.place_forget(), callback()))
-                return
+                self.after(700, lambda: (self.dice_label.place_forget(), callback()))
 
-            progress = time_elapsed / duration
-            self.dice_label.place(relx=0.1 + progress * 0.8, rely=0.5, anchor=tk.CENTER)
-            self.after(15, lambda: step(time_elapsed + 15))
-
-        step(start_time)
+        zoom_step()
 
     def player_defend(self):
         """Handles the player's defend action with a random dice roll effect."""
