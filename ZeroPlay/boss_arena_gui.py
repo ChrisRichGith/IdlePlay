@@ -39,6 +39,7 @@ class BossArenaWindow(tk.Toplevel):
         self.is_player_turn = True
         self.is_fight_over = False
         self.player_is_empowered = False
+        self.player_won = False
         self.is_defending = False
         self._setup_string_vars()
         self.create_widgets()
@@ -303,6 +304,7 @@ class BossArenaWindow(tk.Toplevel):
         self.defend_button.config(state=tk.DISABLED)
 
         if win:
+            self.player_won = True
             self.add_to_log(f"Du hast {self.boss.name} besiegt!")
             # Simple reward for winning
             gold_reward = self.boss.max_hp * 2
@@ -324,6 +326,8 @@ class BossArenaWindow(tk.Toplevel):
 
     def on_close(self):
         """Handles the window closing event."""
+        if not self.player_won:
+            self.player.current_lp = 0
         if self.on_close_callback:
             self.on_close_callback()
         self.destroy()
