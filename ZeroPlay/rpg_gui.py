@@ -749,8 +749,17 @@ class RpgGui(ttk.Frame):
 
     def open_boss_arena_window(self):
         self.pause_quest_loop()
-        self.boss_arena_button.config(state=tk.DISABLED)
-        BossArenaWindow(self, self.player, on_close_callback=self.on_boss_arena_close)
+
+        title = "Warnung"
+        message = "Du bist dabei die Boss-Arena zu betreten.\n\n" \
+                  "Der Kampf kann nicht abgebrochen werden und die Gefahr des Todes ist sehr hoch.\n\n" \
+                  "Möchtest du fortfahren?"
+
+        if messagebox.askyesno(title, message, parent=self):
+            self.boss_arena_button.config(state=tk.DISABLED)
+            BossArenaWindow(self, self.player, on_close_callback=self.on_boss_arena_close)
+        else:
+            self.resume_quest_loop()
 
     def on_boss_arena_close(self):
         self.update_display()
