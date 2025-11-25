@@ -7,22 +7,29 @@ import random
 class Boss:
     """Represents a boss enemy in the game."""
 
-    def __init__(self, name, hp, damage_range, image_path):
+    def __init__(self, name, hp, damage_range, image_path, item_level=1):
         """
-        Initializes a new Boss.
+        Initializes a new Boss, scaling its stats based on the player's item level.
 
         Args:
             name (str): The name of the boss.
-            hp (int): The maximum and current health points of the boss.
-            damage_range (tuple): A tuple containing the min and max damage.
+            hp (int): The base health points of the boss.
+            damage_range (tuple): A tuple containing the base min and max damage.
             image_path (str): The file path for the boss's image.
+            item_level (int): The player's current item level, used for scaling.
         """
         self.name = name
-        self.max_hp = hp
-        self.current_hp = hp
-        self.damage_range = damage_range
         self.image_path = image_path
         self.is_weakened = False
+
+        # Scale stats based on item level
+        # We use a non-linear formula to make gear more impactful
+        scaling_factor = 1 + (item_level / 10) ** 1.2
+
+        self.max_hp = int(hp * scaling_factor)
+        self.current_hp = self.max_hp
+        min_dmg, max_dmg = damage_range
+        self.damage_range = (int(min_dmg * scaling_factor), int(max_dmg * scaling_factor))
 
     def attack(self):
         """
