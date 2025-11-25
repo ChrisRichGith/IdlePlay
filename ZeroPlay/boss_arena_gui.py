@@ -10,7 +10,8 @@ from PIL import Image, ImageTk
 
 from boss import Boss
 from game_data import AVAILABLE_BOSSES, CLASSES
-from utils import center_window
+from utils import center_window, format_currency
+from loot_system import generate_boss_reward
 
 class BossArenaWindow(tk.Toplevel):
     """A Toplevel window for the boss fight."""
@@ -39,6 +40,7 @@ class BossArenaWindow(tk.Toplevel):
         self.is_player_turn = True
         self.is_fight_over = False
         self.player_is_empowered = False
+        self.player_won = False
         self.is_defending = False
         self._setup_string_vars()
         self.create_widgets()
@@ -82,7 +84,8 @@ class BossArenaWindow(tk.Toplevel):
         middle_frame = ttk.Frame(main_frame)
         middle_frame.grid(row=0, column=1, sticky="nsew", padx=5)
         middle_frame.rowconfigure(0, weight=3) # Log gets more space
-        middle_frame.rowconfigure(1, weight=1) # Actions
+        middle_frame.rowconfigure(1, weight=0) # Actions
+        middle_frame.rowconfigure(2, weight=1) # Legend
         middle_frame.columnconfigure(0, weight=1)
 
         # Combat Log
@@ -109,6 +112,18 @@ class BossArenaWindow(tk.Toplevel):
         self.attack_button.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
         self.defend_button = ttk.Button(actions_frame, text="Verteidigen", command=self.player_defend)
         self.defend_button.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+
+        # Dice Roll Legend
+        legend_frame = ttk.LabelFrame(middle_frame, text="🎲 Verteidigungs-Legende", padding="10")
+        legend_frame.grid(row=2, column=0, sticky="nsew", pady=(10, 0))
+
+        legend_text = (
+            "1: Konter-Angriff\n"
+            "2: Verstärkter nächster Angriff\n"
+            "3: Leichte Heilung\n"
+            "4: Boss schwächen"
+        )
+        ttk.Label(legend_frame, text=legend_text, justify=tk.LEFT).pack(anchor="w")
 
         # Dice label for animation (initially hidden)
         self.dice_label = ttk.Label(self, text="🎲", font=("", 36))
@@ -303,14 +318,26 @@ class BossArenaWindow(tk.Toplevel):
         self.defend_button.config(state=tk.DISABLED)
 
         if win:
+            self.player_won = True
             self.add_to_log(f"Du hast {self.boss.name} besiegt!")
-            # Simple reward for winning
-            gold_reward = self.boss.max_hp * 2
+
+            # Generate rewards
+            gold_reward = self.boss.max_hp # Reduced from 2x to 1x
             xp_reward = self.boss.max_hp * 5
-            self.player.add_loot(gold_reward, None)
+            boss_item = generate_boss_reward(self.player)
+
+            # Add rewards to player
+            item_added = self.player.add_loot(gold_reward, boss_item)
             level_up_info = self.player.add_xp(xp_reward)
 
-            message = f"Du hast gewonnen!\n\nBelohnung:\n{gold_reward} Gold\n{xp_reward} XP"
+            # Build victory message
+            message = f"Du hast gewonnen!\n\nBelohnungen:\n- {format_currency(gold_reward)}\n- {xp_reward} XP"
+            if boss_item:
+                if item_added:
+                    message += f"\n- {boss_item.name}"
+                else:
+                    message += f"\n- {boss_item.name} (Inventar voll!)"
+
             if level_up_info:
                 message += "\n\nLEVEL UP!"
 
@@ -324,6 +351,8 @@ class BossArenaWindow(tk.Toplevel):
 
     def on_close(self):
         """Handles the window closing event."""
+        if not self.player_won:
+            self.player.current_lp = 0
         if self.on_close_callback:
             self.on_close_callback()
         self.destroy()
