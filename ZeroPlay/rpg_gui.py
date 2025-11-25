@@ -17,6 +17,7 @@ from boss_arena_gui import BossArenaWindow
 from save_load_system import save_game
 from utils import format_currency, center_window
 from game_over_gui import GameOverWindow
+from game_data import BOSS_TIERS
 
 # Liste verfügbarer Quests
 AVAILABLE_QUESTS = [
@@ -108,6 +109,7 @@ class RpgGui(ttk.Frame):
         """Creates tkinter StringVars to link data to labels."""
         self.char_name_var = tk.StringVar()
         self.char_level_var = tk.StringVar()
+        self.item_level_var = tk.StringVar()
         self.char_gold_var = tk.StringVar()
         self.stats_vars = {stat: tk.StringVar() for stat in ['Stärke', 'Intelligenz', 'Glück']}
         self.equipment_vars = {slot: tk.StringVar() for slot in ['Kopf', 'Brust', 'Waffe']}
@@ -165,7 +167,7 @@ class RpgGui(ttk.Frame):
         char_frame.columnconfigure(2, weight=1) # Allow portrait column to expand
 
         # --- Left side: Stats ---
-        labels = {"Name:": self.char_name_var, "Level:": self.char_level_var, "Gold:": self.char_gold_var}
+        labels = {"Name:": self.char_name_var, "Level:": self.char_level_var, "Item Level:": self.item_level_var, "Gold:": self.char_gold_var}
         for i, (text, var) in enumerate(labels.items()):
             ttk.Label(char_frame, text=text).grid(row=i, column=0, sticky="w")
             ttk.Label(char_frame, textvariable=var).grid(row=i, column=1, sticky="w")
@@ -343,6 +345,7 @@ class RpgGui(ttk.Frame):
     def update_display(self):
         self.char_name_var.set(f"{self.player.name} ({self.player.klasse})")
         self.char_level_var.set(self.player.level)
+        self.item_level_var.set(self.player.get_item_level())
         self.char_gold_var.set(format_currency(self.player.copper))
         total_stats = self.player.get_total_stats()
         for stat, var in self.stats_vars.items():
@@ -712,8 +715,17 @@ class RpgGui(ttk.Frame):
         self.quest_button.config(state=tk.DISABLED if is_questing else tk.NORMAL)
         self.trader_button.config(state=tk.DISABLED if is_questing else tk.NORMAL)
         self.blacksmith_button.config(state=tk.DISABLED if is_questing else tk.NORMAL)
-        self.boss_arena_button.config(state=tk.DISABLED if is_questing else tk.NORMAL)
         self.auto_quest_button.config(state=tk.DISABLED if is_questing and not self.is_auto_questing else tk.NORMAL)
+
+        # Boss button logic
+        can_fight_boss = False
+        if not is_questing:
+            current_tier = self.player.boss_tier
+            if current_tier < len(BOSS_TIERS):
+                required_ilvl = BOSS_TIERS[current_tier]["required_item_level"]
+                if self.player.get_item_level() >= required_ilvl:
+                    can_fight_boss = True
+        self.boss_arena_button.config(state=tk.NORMAL if can_fight_boss else tk.DISABLED)
         self.minigame_toggle_button.config(state=tk.NORMAL) # Keep the button always enabled
         if not selected_indices:
             self.equip_button.config(state=tk.DISABLED)
@@ -749,15 +761,23 @@ class RpgGui(ttk.Frame):
 
     def open_boss_arena_window(self):
         self.pause_quest_loop()
+        current_tier = self.player.boss_tier
+        if current_tier >= len(BOSS_TIERS):
+            messagebox.showinfo("Glückwunsch!", "Du hast bereits alle verfügbaren Bosse besiegt!", parent=self)
+            self.resume_quest_loop()
+            return
+
+        boss_data = BOSS_TIERS[current_tier]
+        player_ilvl = self.player.get_item_level()
 
         title = "Warnung"
-        message = "Du bist dabei die Boss-Arena zu betreten.\n\n" \
+        message = f"Du bist dabei {boss_data['name']} (Stufe {player_ilvl}) herauszufordern.\n\n" \
                   "Der Kampf kann nicht abgebrochen werden und die Gefahr des Todes ist sehr hoch.\n\n" \
                   "Möchtest du fortfahren?"
 
         if messagebox.askyesno(title, message, parent=self):
             self.boss_arena_button.config(state=tk.DISABLED)
-            BossArenaWindow(self, self.player, on_close_callback=self.on_boss_arena_close)
+            BossArenaWindow(self, self.player, boss_data, player_ilvl, on_close_callback=self.on_boss_arena_close)
         else:
             self.resume_quest_loop()
 

@@ -32,6 +32,7 @@ class Character:
         self.max_inventory_size = 10
         self.equipment = {'Kopf': None, 'Brust': None, 'Waffe': None}
         self.resources = {}
+        self.boss_tier = 0
 
         # Derived stats
         self.max_lp = 0
@@ -250,6 +251,19 @@ class Character:
                     if stat in total_stats:
                         total_stats[stat] += boost
         return total_stats
+
+    def get_item_level(self):
+        """Calculates the average item score of all equipped gear."""
+        total_score = 0
+        equipped_items = 0
+        for item in self.equipment.values():
+            if item:
+                total_score += item.get_item_score()
+                equipped_items += 1
+
+        if equipped_items == 0:
+            return 0
+        return total_score // equipped_items
 
     def display_status(self):
         """DEPRECATED: Prints a detailed status screen for the character."""

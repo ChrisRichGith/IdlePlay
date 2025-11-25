@@ -115,20 +115,26 @@ ROGUE_EVENTS = [
     "Du weichst einer Falle geschickt aus.",
 ]
 
-AVAILABLE_BOSSES = [
+BOSS_TIERS = [
     {
+        "tier": 0,
         "name": "Goblin König",
         "hp": 150,
         "damage": (10, 20),
-        "image_path": "assets/bosses/goblin_king.png"
+        "image_path": "assets/bosses/goblin_king.png",
+        "required_item_level": 0  # First boss is always available
     },
     {
+        "tier": 1,
         "name": "Steingolem",
         "hp": 250,
-        "damage": (5, 25),
-        "image_path": "assets/bosses/stone_golem.png"
+        "damage": (15, 25),
+        "image_path": "assets/bosses/stone_golem.png",
+        "required_item_level": 20
     },
+    # Add more bosses here for future tiers
 ]
+
 
 # --- Components for procedural text generation ---
 

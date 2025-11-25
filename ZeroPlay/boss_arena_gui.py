@@ -9,14 +9,14 @@ import time
 from PIL import Image, ImageTk
 
 from boss import Boss
-from game_data import AVAILABLE_BOSSES, CLASSES
+from game_data import CLASSES
 from utils import center_window, format_currency
 from loot_system import generate_boss_reward
 
 class BossArenaWindow(tk.Toplevel):
     """A Toplevel window for the boss fight."""
 
-    def __init__(self, parent, player, on_close_callback=None):
+    def __init__(self, parent, player, boss_data, item_level, on_close_callback=None):
         """Initializes the boss arena window."""
         super().__init__(parent)
         self.title("Boss Arena")
@@ -28,13 +28,13 @@ class BossArenaWindow(tk.Toplevel):
         self.grab_set()
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
-        # Select a random boss
-        boss_data = random.choice(AVAILABLE_BOSSES)
+        # Create the boss with scaled stats
         self.boss = Boss(
             name=boss_data["name"],
             hp=boss_data["hp"],
             damage_range=boss_data["damage"],
-            image_path=boss_data["image_path"]
+            image_path=boss_data["image_path"],
+            item_level=item_level
         )
 
         self.is_player_turn = True
@@ -319,6 +319,7 @@ class BossArenaWindow(tk.Toplevel):
 
         if win:
             self.player_won = True
+            self.player.boss_tier += 1  # Progress to the next boss tier
             self.add_to_log(f"Du hast {self.boss.name} besiegt!")
 
             # Generate rewards
