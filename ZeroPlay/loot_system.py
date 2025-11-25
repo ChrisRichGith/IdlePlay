@@ -87,11 +87,91 @@ def generate_item_for_level(level, luck):
     )
 
 
+def generate_boss_reward(player):
+    """
+    Generates a guaranteed item upgrade for the player after defeating a boss.
+    The item will be for a random slot and will be statistically better than
+    what the player currently has equipped in that slot.
+
+    Args:
+        player (Character): The player character.
+
+    Returns:
+        Item: A powerful new Item object.
+    """
+    # 1. Choose a random slot to upgrade
+    slots = ["Waffe", "Kopf", "Brust"]
+    chosen_slot = random.choice(slots)
+
+    # 2. Determine the rarity based on player level, ensuring it's at least "Selten"
+    if player.level < 15:
+        chosen_rarity_name = "Selten"
+    elif player.level < 30:
+        chosen_rarity_name = "Episch"
+    else:
+        chosen_rarity_name = "Legendär"
+    rarity_data = RARITIES[chosen_rarity_name]
+
+    # 3. Find a suitable blueprint for the player's class
+    allowed_armor_types = player.get_allowed_armor_types()
+    main_stat = player.main_stat
+
+    possible_blueprints = [
+        bp for bp in ITEM_BLUEPRINTS[chosen_slot]
+        if (bp.get("armor_type") in allowed_armor_types and bp.get("base_stat") == main_stat)
+        or (chosen_slot == "Waffe" and bp.get("base_stat") == main_stat)
+    ]
+
+    if not possible_blueprints:
+        # Fallback: just pick a main-stat appropriate weapon if armor fails
+        possible_blueprints = [bp for bp in ITEM_BLUEPRINTS["Waffe"] if bp.get("base_stat") == main_stat]
+        chosen_slot = "Waffe"
+
+    blueprint = random.choice(possible_blueprints)
+
+    # 4. Generate stats that are a guaranteed upgrade
+    # Get the currently equipped item's score to use as a baseline
+    currently_equipped = player.equipment.get(chosen_slot)
+    base_score = 0
+    if currently_equipped:
+        base_score = currently_equipped.get_weighted_score(main_stat)
+
+    # Ensure the new item's primary stat is significantly better
+    stats_boost = {}
+    # Make the bonus at least 20% better than the current item's score
+    # and also scale with level and rarity.
+    min_primary_stat = int((base_score * 1.2) + (player.level * 1.5))
+    primary_stat_value = int(min_primary_stat * rarity_data["modifier"])
+    stats_boost[main_stat] = max(min_primary_stat, primary_stat_value)
+
+    # Add a secondary stat (Luck or the main stat again for a bigger boost)
+    if random.random() < 0.75: # 75% chance for more main stat
+        stats_boost[main_stat] += int(primary_stat_value * 0.4)
+    else:
+        stats_boost["Glück"] = int(primary_stat_value * 0.5)
+
+    # 5. Assemble the item
+    item_name = f"Bosse {blueprint['name'][0]}"
+    total_stat_points = sum(stats_boost.values())
+    value = int((player.level * 5) + (total_stat_points * 4) * rarity_data["modifier"])
+    armor_type = blueprint.get("armor_type")
+
+    return Item(
+        name=item_name,
+        slot=chosen_slot,
+        stats_boost=stats_boost,
+        value=value,
+        rarity=chosen_rarity_name,
+        color=rarity_data["color"],
+        armor_type=armor_type
+    )
+
+
 # Example usage for testing:
 if __name__ == '__main__':
     for lvl in [1, 5, 10, 20, 50]:
         print(f"--- Generating Item for Level {lvl} ---")
         for _ in range(3):
-            new_item = generate_item_for_level(lvl)
+            new_item = generate_item_for_level(lvl, 5)
             print(new_item)
         print("-" * 20)

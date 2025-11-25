@@ -44,6 +44,10 @@ class Character:
         self.current_wut = 0
         self.update_derived_stats(heal_on_update=True) # Initial calculation and full heal
 
+    def get_allowed_armor_types(self):
+        """Returns a list of armor types the character's class can wear."""
+        return CLASSES[self.klasse].get("allowed_armor", [])
+
     def update_derived_stats(self, heal_on_update=False):
         """
         Calculates derived stats like LP and MP based on base attributes.
