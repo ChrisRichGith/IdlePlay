@@ -10,7 +10,7 @@ from PIL import Image, ImageTk
 
 from boss import Boss
 from game_data import AVAILABLE_BOSSES, CLASSES
-from utils import center_window
+from utils import center_window, format_currency
 from loot_system import generate_boss_reward
 
 class BossArenaWindow(tk.Toplevel):
@@ -322,7 +322,7 @@ class BossArenaWindow(tk.Toplevel):
             self.add_to_log(f"Du hast {self.boss.name} besiegt!")
 
             # Generate rewards
-            gold_reward = self.boss.max_hp * 2
+            gold_reward = self.boss.max_hp # Reduced from 2x to 1x
             xp_reward = self.boss.max_hp * 5
             boss_item = generate_boss_reward(self.player)
 
@@ -331,7 +331,7 @@ class BossArenaWindow(tk.Toplevel):
             level_up_info = self.player.add_xp(xp_reward)
 
             # Build victory message
-            message = f"Du hast gewonnen!\n\nBelohnungen:\n- {gold_reward} Gold\n- {xp_reward} XP"
+            message = f"Du hast gewonnen!\n\nBelohnungen:\n- {format_currency(gold_reward)}\n- {xp_reward} XP"
             if boss_item:
                 if item_added:
                     message += f"\n- {boss_item.name}"
