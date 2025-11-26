@@ -6,6 +6,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from blacksmith import Blacksmith
 from utils import center_window
+from game_data import RARITIES
 
 class BlacksmithWindow(tk.Toplevel):
     """Manages the blacksmith interaction window."""
@@ -115,11 +116,20 @@ class BlacksmithWindow(tk.Toplevel):
             return
 
         # Item selected
-        self.item_name_label.config(text=self.selected_item.name)
+        max_upgrades = RARITIES[self.selected_item.rarity].get("max_upgrades", 0)
+        upgrade_level_text = f"+{self.selected_item.upgrade_level} / +{max_upgrades}"
+        self.item_name_label.config(text=f"{self.selected_item.name} ({upgrade_level_text})")
 
         # Current stats
         stats_text = "Aktuelle Werte:\n" + "\n".join([f"  {stat}: {val}" for stat, val in self.selected_item.stats_boost.items()])
         self.current_stats_label.config(text=stats_text)
+
+        # Check if max level is reached
+        if self.selected_item.upgrade_level >= max_upgrades:
+            self.next_stats_label.config(text="Maximale Stufe erreicht")
+            self.cost_label.config(text="")
+            self.upgrade_button.config(state=tk.DISABLED)
+            return
 
         # Predicted next stats
         next_level_stats = {stat: val + 1 for stat, val in self.selected_item.stats_boost.items()}
@@ -128,16 +138,13 @@ class BlacksmithWindow(tk.Toplevel):
 
         # Cost
         cost = self.blacksmith.get_upgrade_cost(self.selected_item)
-        if cost:
-            cost_text = "Kosten:\n" + "\n".join([f"  {name}: {amount}" for name, amount in cost.items()])
-            self.cost_label.config(text=cost_text)
-            # Check if player can afford it
-            if self.blacksmith.can_afford_upgrade(self.player.resources, cost):
-                self.upgrade_button.config(state=tk.NORMAL)
-            else:
-                self.upgrade_button.config(state=tk.DISABLED)
+        cost_text = "Kosten:\n" + "\n".join([f"  {name}: {amount}" for name, amount in cost.items()])
+        self.cost_label.config(text=cost_text)
+
+        # Check if player can afford it
+        if self.blacksmith.can_afford_upgrade(self.player.resources, cost):
+            self.upgrade_button.config(state=tk.NORMAL)
         else:
-            self.cost_label.config(text="Kosten: Maximale Stufe erreicht")
             self.upgrade_button.config(state=tk.DISABLED)
 
     def upgrade_item(self):
@@ -145,21 +152,14 @@ class BlacksmithWindow(tk.Toplevel):
         if not self.selected_item:
             return
 
-        cost = self.blacksmith.get_upgrade_cost(self.selected_item)
+        success, message = self.blacksmith.upgrade_item(self.player, self.selected_item)
 
-        if not self.blacksmith.can_afford_upgrade(self.player.resources, cost):
-            messagebox.showwarning("Nicht genügend Ressourcen", "Du hast nicht genug Ressourcen für dieses Upgrade.")
-            return
+        if success:
+            messagebox.showinfo("Erfolg!", message, parent=self)
+        else:
+            messagebox.showwarning("Fehler", message, parent=self)
 
-        # Deduct resources
-        self.player.remove_resources(cost)
-
-        # Upgrade the item
-        self.selected_item.upgrade()
-
-        messagebox.showinfo("Erfolg!", f"{self.selected_item.name} wurde erfolgreich verbessert!")
-
-        # Refresh the display to show new stats and costs
+        # Refresh the display regardless of outcome
         self.update_display()
 
 

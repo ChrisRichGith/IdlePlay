@@ -47,13 +47,13 @@ ITEM_BLUEPRINTS = {
 }
 
 RARITIES = {
-    "Schlecht":     {"color": "#B0B0B0", "modifier": 0.7, "min_level": 1, "weight": 10},
-    "Gewöhnlich":   {"color": "#FFFFFF", "modifier": 1.0, "min_level": 1, "weight": 70},
-    "Ungewöhnlich": {"color": "#1EFF00", "modifier": 1.2, "min_level": 5, "weight": 15},
-    "Selten":       {"color": "#68AFFF", "modifier": 1.5, "min_level": 15, "weight": 4},
-    "Episch":       {"color": "#A335EE", "modifier": 1.8, "min_level": 30, "weight": 1},
-    "Legendär":     {"color": "#FF8000", "modifier": 2.2, "min_level": 50, "weight": 0.1},
-    "Mythisch":     {"color": "#E5CC80", "modifier": 2.7, "min_level": 75, "weight": 0.01}
+    "Schlecht":     {"color": "#B0B0B0", "modifier": 0.7, "min_level": 1, "weight": 10, "max_upgrades": 2},
+    "Gewöhnlich":   {"color": "#FFFFFF", "modifier": 1.0, "min_level": 1, "weight": 70, "max_upgrades": 3},
+    "Ungewöhnlich": {"color": "#1EFF00", "modifier": 1.2, "min_level": 5, "weight": 15, "max_upgrades": 5},
+    "Selten":       {"color": "#68AFFF", "modifier": 1.5, "min_level": 15, "weight": 4,  "max_upgrades": 7},
+    "Episch":       {"color": "#A335EE", "modifier": 1.8, "min_level": 30, "weight": 1,  "max_upgrades": 10},
+    "Legendär":     {"color": "#FF8000", "modifier": 2.2, "min_level": 50, "weight": 0.1,"max_upgrades": 13},
+    "Mythisch":     {"color": "#E5CC80", "modifier": 2.7, "min_level": 75, "weight": 0.01,"max_upgrades": 15}
 }
 
 ITEM_ICONS = {

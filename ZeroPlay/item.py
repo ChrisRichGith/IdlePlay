@@ -89,12 +89,22 @@ class Item:
         self.value = int(self.base_value * (1 + self.upgrade_level * 0.5))
 
     def upgrade(self):
-        """Increases the item's upgrade level by 1 and updates its properties."""
+        """
+        Increases the item's upgrade level by 1 if not at max.
+
+        Returns:
+            bool: True if the upgrade was successful, False otherwise.
+        """
         if self.item_type != "Ausrüstung":
-            return # Only equipment can be upgraded
+            return False
+
+        max_upgrades = RARITIES[self.rarity].get("max_upgrades", 0)
+        if self.upgrade_level >= max_upgrades:
+            return False # Already at max level
 
         self.upgrade_level += 1
         self.update_upgraded_state()
+        return True
 
     def get_weighted_score(self, main_stat, main_stat_weight=1.5):
         """
