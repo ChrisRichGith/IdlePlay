@@ -35,62 +35,61 @@ class StartMenu(ttk.Frame):
     def create_widgets(self):
         self.master.title("Chronicle of the Idle Hero - Hauptmenü")
 
-        # Introduction Text
-        intro_text_content = (
-            "Willkommen bei Chronicle of the Idle Hero!\n\n"
-            "Wähle einen Spielstand oder erstelle einen neuen Helden. "
-            "Dein Held wird automatisch Quests erledigen. Deine Aufgabe ist es, "
-            "seine Ausrüstung zu verwalten und Tränke zu kaufen.\n\n"
-            "ACHTUNG: Wenn dein Held stirbt, wird sein Spielstand endgültig gelöscht!"
-        )
-        intro_frame = ttk.LabelFrame(self, text="Spielanleitung", padding=10)
-        intro_frame.pack(fill=tk.X, padx=10, pady=10)
-        intro_label = ttk.Label(intro_frame, text=intro_text_content, wraplength=550, justify=tk.LEFT)
-        intro_label.pack()
+        # Main container that will be centered
+        center_frame = ttk.Frame(self, padding=20)
+        center_frame.pack(expand=True)
 
-        main_pane = ttk.PanedWindow(self, orient=tk.HORIZONTAL)
-        main_pane.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        # Title
+        ttk.Label(center_frame, text="Chronicle of the Idle Hero", font=("Helvetica", 20, "bold")).grid(row=0, column=0, columnspan=2, pady=(0, 20))
 
-        # Left side: Save file list
-        list_frame = ttk.Frame(main_pane, padding=5)
-        main_pane.add(list_frame, weight=1)
-        ttk.Label(list_frame, text="Verfügbare Spielstände:", font=("Helvetica", 12)).pack(pady=5)
-        self.save_listbox = tk.Listbox(list_frame)
+        # --- Left Column: Load Game ---
+        load_frame = ttk.LabelFrame(center_frame, text="Spielstand laden", padding=10)
+        load_frame.grid(row=1, column=0, sticky="ns", padx=(0, 10))
+
+        self.save_listbox = tk.Listbox(load_frame, height=10)
         self.save_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-
-        scrollbar = ttk.Scrollbar(list_frame, orient=tk.VERTICAL, command=self.save_listbox.yview)
+        scrollbar = ttk.Scrollbar(load_frame, orient=tk.VERTICAL, command=self.save_listbox.yview)
         self.save_listbox.config(yscrollcommand=scrollbar.set)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
         self.populate_save_list()
         self.save_listbox.bind('<<ListboxSelect>>', self.on_select)
 
-        # Right side: Character Preview
-        preview_frame = ttk.LabelFrame(main_pane, text="Vorschau", padding=10)
-        main_pane.add(preview_frame, weight=1)
+        # --- Right Column: Preview and Actions ---
+        right_column_frame = ttk.Frame(center_frame)
+        right_column_frame.grid(row=1, column=1, sticky="ns", padx=(10, 0))
+
+        # Character Preview
+        preview_frame = ttk.LabelFrame(right_column_frame, text="Vorschau", padding=10)
+        preview_frame.pack(fill=tk.BOTH, expand=True)
 
         ttk.Label(preview_frame, textvariable=self.preview_name_var).pack(anchor=tk.W)
         ttk.Label(preview_frame, textvariable=self.preview_level_var).pack(anchor=tk.W)
         ttk.Label(preview_frame, textvariable=self.preview_gold_var).pack(anchor=tk.W, pady=(0, 10))
-
         for stat in ['Stärke', 'Intelligenz', 'Glück']:
             ttk.Label(preview_frame, textvariable=self.preview_stats_vars[stat]).pack(anchor=tk.W)
 
-        # Bottom buttons
-        button_frame = ttk.Frame(self)
-        button_frame.pack(fill=tk.X, padx=10, pady=10, side=tk.BOTTOM)
+        # Action Buttons
+        button_frame = ttk.Frame(right_column_frame, padding=(0, 10, 0, 0))
+        button_frame.pack(fill=tk.X, pady=(10,0))
+        button_frame.columnconfigure((0, 1), weight=1)
 
         self.load_button = ttk.Button(button_frame, text="Laden", command=self.load_game, state=tk.DISABLED)
-        self.load_button.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=2)
-
+        self.load_button.grid(row=0, column=0, sticky="ew", padx=(0, 5))
         new_game_button = ttk.Button(button_frame, text="Neues Spiel", command=self.callbacks['new'])
-        new_game_button.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=2)
-
+        new_game_button.grid(row=0, column=1, sticky="ew", padx=(5, 0))
         highscore_button = ttk.Button(button_frame, text="Highscores", command=self.callbacks.get('highscores', lambda: None))
-        highscore_button.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=2)
-
+        highscore_button.grid(row=1, column=0, sticky="ew", padx=(0, 5), pady=(5,0))
         quit_button = ttk.Button(button_frame, text="Beenden", command=self.callbacks['quit'])
-        quit_button.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=2)
+        quit_button.grid(row=1, column=1, sticky="ew", padx=(5, 0), pady=(5,0))
+
+        # Bottom instruction text
+        intro_text_content = (
+            "Wähle einen Spielstand oder erstelle einen neuen Helden.\n"
+            "Achtung: Wenn dein Held stirbt, wird sein Spielstand endgültig gelöscht!"
+        )
+        intro_label = ttk.Label(center_frame, text=intro_text_content, justify=tk.CENTER, style="TSecondary.TLabel")
+        intro_label.grid(row=2, column=0, columnspan=2, pady=(20, 0))
 
     def populate_save_list(self):
         """Fills the listbox with available save files."""
