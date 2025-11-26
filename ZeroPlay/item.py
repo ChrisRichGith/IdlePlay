@@ -4,7 +4,7 @@ Defines the Item class for all in-game items.
 """
 import random
 from utils import format_currency
-from game_data import ITEM_ICONS
+from game_data import ITEM_ICONS, RARITIES
 
 class Item:
     """Represents an item in the game with a name, type, value, and potential effects."""
@@ -117,3 +117,17 @@ class Item:
             else:
                 score += value # Other stats have a weight of 1
         return score
+
+    def get_item_score(self):
+        """
+        Calculates a single 'item level' score based on total stats and rarity.
+        """
+        if not self.stats_boost or self.item_type != "Ausrüstung":
+            return 0
+
+        total_stats = sum(self.stats_boost.values())
+        rarity_modifier = RARITIES.get(self.rarity, {}).get("modifier", 1.0)
+
+        # The score is the total stat points multiplied by the rarity modifier, squared to create a wider gap
+        score = total_stats * (rarity_modifier ** 2)
+        return int(score)
