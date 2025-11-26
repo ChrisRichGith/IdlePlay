@@ -48,3 +48,28 @@ class Blacksmith:
             if player_resources.get(resource, 0) < amount:
                 return False
         return True
+
+    def upgrade_item(self, player, item):
+        """
+        Attempts to upgrade an item for a player.
+
+        Args:
+            player (Character): The player character.
+            item (Item): The item to upgrade.
+
+        Returns:
+            tuple: (bool, str) indicating success and a message.
+        """
+        cost = self.get_upgrade_cost(item)
+        if not cost:
+            return False, "Dieser Gegenstand kann nicht aufgewertet werden."
+
+        if not self.can_afford_upgrade(player.resources, cost):
+            return False, "Nicht genügend Ressourcen für die Aufwertung."
+
+        # Attempt to upgrade the item
+        if item.upgrade():
+            player.remove_resources(cost)
+            return True, f"{item.name} erfolgreich aufgewertet!"
+        else:
+            return False, "Gegenstand hat bereits die maximale Stufe erreicht."

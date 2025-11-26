@@ -4,7 +4,7 @@ Defines the Item class for all in-game items.
 """
 import random
 from utils import format_currency
-from game_data import ITEM_ICONS
+from game_data import ITEM_ICONS, RARITIES
 
 class Item:
     """Represents an item in the game with a name, type, value, and potential effects."""
@@ -89,12 +89,22 @@ class Item:
         self.value = int(self.base_value * (1 + self.upgrade_level * 0.5))
 
     def upgrade(self):
-        """Increases the item's upgrade level by 1 and updates its properties."""
+        """
+        Increases the item's upgrade level by 1 if not at max.
+
+        Returns:
+            bool: True if the upgrade was successful, False otherwise.
+        """
         if self.item_type != "Ausrüstung":
-            return # Only equipment can be upgraded
+            return False
+
+        max_upgrades = RARITIES[self.rarity].get("max_upgrades", 0)
+        if self.upgrade_level >= max_upgrades:
+            return False # Already at max level
 
         self.upgrade_level += 1
         self.update_upgraded_state()
+        return True
 
     def get_weighted_score(self, main_stat, main_stat_weight=1.5):
         """
@@ -117,3 +127,17 @@ class Item:
             else:
                 score += value # Other stats have a weight of 1
         return score
+
+    def get_item_score(self):
+        """
+        Calculates a single 'item level' score based on total stats and rarity.
+        """
+        if not self.stats_boost or self.item_type != "Ausrüstung":
+            return 0
+
+        total_stats = sum(self.stats_boost.values())
+        rarity_modifier = RARITIES.get(self.rarity, {}).get("modifier", 1.0)
+
+        # The score is the total stat points multiplied by the rarity modifier, squared to create a wider gap
+        score = total_stats * (rarity_modifier ** 2)
+        return int(score)

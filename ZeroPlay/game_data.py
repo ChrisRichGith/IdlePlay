@@ -47,13 +47,13 @@ ITEM_BLUEPRINTS = {
 }
 
 RARITIES = {
-    "Schlecht":     {"color": "#B0B0B0", "modifier": 0.7, "min_level": 1, "weight": 10},
-    "Gewöhnlich":   {"color": "#FFFFFF", "modifier": 1.0, "min_level": 1, "weight": 70},
-    "Ungewöhnlich": {"color": "#1EFF00", "modifier": 1.2, "min_level": 5, "weight": 15},
-    "Selten":       {"color": "#68AFFF", "modifier": 1.5, "min_level": 15, "weight": 4},
-    "Episch":       {"color": "#A335EE", "modifier": 1.8, "min_level": 30, "weight": 1},
-    "Legendär":     {"color": "#FF8000", "modifier": 2.2, "min_level": 50, "weight": 0.1},
-    "Mythisch":     {"color": "#E5CC80", "modifier": 2.7, "min_level": 75, "weight": 0.01}
+    "Schlecht":     {"color": "#B0B0B0", "modifier": 0.7, "min_level": 1, "weight": 10, "max_upgrades": 2},
+    "Gewöhnlich":   {"color": "#FFFFFF", "modifier": 1.0, "min_level": 1, "weight": 70, "max_upgrades": 3},
+    "Ungewöhnlich": {"color": "#1EFF00", "modifier": 1.2, "min_level": 5, "weight": 15, "max_upgrades": 5},
+    "Selten":       {"color": "#68AFFF", "modifier": 1.5, "min_level": 15, "weight": 4,  "max_upgrades": 7},
+    "Episch":       {"color": "#A335EE", "modifier": 1.8, "min_level": 30, "weight": 1,  "max_upgrades": 10},
+    "Legendär":     {"color": "#FF8000", "modifier": 2.2, "min_level": 50, "weight": 0.1,"max_upgrades": 13},
+    "Mythisch":     {"color": "#E5CC80", "modifier": 2.7, "min_level": 75, "weight": 0.01,"max_upgrades": 15}
 }
 
 ITEM_ICONS = {
@@ -115,20 +115,57 @@ ROGUE_EVENTS = [
     "Du weichst einer Falle geschickt aus.",
 ]
 
-AVAILABLE_BOSSES = [
+BOSS_TIERS = [
     {
+        "tier": 0,
         "name": "Goblin König",
         "hp": 150,
         "damage": (10, 20),
-        "image_path": "assets/bosses/goblin_king.png"
+        "image_path": "assets/bosses/goblin_king.png",
+        "required_item_level": 0  # First boss is always available
     },
     {
+        "tier": 1,
         "name": "Steingolem",
         "hp": 250,
-        "damage": (5, 25),
-        "image_path": "assets/bosses/stone_golem.png"
+        "damage": (15, 25),
+        "image_path": "assets/bosses/stone_golem.png",
+        "required_item_level": 20
     },
+    {
+        "tier": 2,
+        "name": "Chimären-Matriarchin",
+        "hp": 400,
+        "damage": (25, 40),
+        "image_path": "assets/bosses/chimaeren_matriarchin.png",
+        "required_item_level": 45
+    },
+    {
+        "tier": 3,
+        "name": "Nekromanten-Lord",
+        "hp": 650,
+        "damage": (40, 60),
+        "image_path": "assets/bosses/nekromanten_lord.png",
+        "required_item_level": 75
+    },
+    {
+        "tier": 4,
+        "name": "Eisriesen-Häuptling",
+        "hp": 1000,
+        "damage": (60, 80),
+        "image_path": "assets/bosses/eisriesen_haeuptling.png",
+        "required_item_level": 110
+    },
+    {
+        "tier": 5,
+        "name": "Alter Drache",
+        "hp": 1500,
+        "damage": (80, 120),
+        "image_path": "assets/bosses/alter_drache.png",
+        "required_item_level": 150
+    }
 ]
+
 
 # --- Components for procedural text generation ---
 
