@@ -30,18 +30,22 @@ class HighscoreWindow(tk.Toplevel):
         container.rowconfigure(0, weight=1)
 
         # Define the columns for the Treeview
-        columns = ("name", "level", "best_equipment", "copper")
+        columns = ("name", "level", "bosses", "resources", "best_equipment", "copper")
         self.tree = ttk.Treeview(container, columns=columns, show="headings")
 
         # Define headings
         self.tree.heading("name", text="Name")
         self.tree.heading("level", text="Level")
+        self.tree.heading("bosses", text="Besiegte Bosse")
+        self.tree.heading("resources", text="Ressourcen")
         self.tree.heading("best_equipment", text="Beste Ausrüstung")
         self.tree.heading("copper", text="Gold")
 
         # Configure column widths
         self.tree.column("name", width=120)
         self.tree.column("level", width=50, anchor="center")
+        self.tree.column("bosses", width=100, anchor="center")
+        self.tree.column("resources", width=200)
         self.tree.column("best_equipment", width=300)
         self.tree.column("copper", width=100, anchor="e")
 
@@ -63,6 +67,12 @@ class HighscoreWindow(tk.Toplevel):
         scores = load_highscores()
         for score in scores:
             copper_formatted = format_currency(score.get("copper", 0))
+
+            resources_dict = score.get("resources", {})
+            resources_str = ", ".join(f"{name}: {amount}" for name, amount in resources_dict.items())
+            if not resources_str:
+                resources_str = "N/A"
+
             best_equipment = (
                 f"Waffe: {score.get('best_weapon', 'N/A')}, "
                 f"Kopf: {score.get('best_head', 'N/A')}, "
@@ -71,6 +81,8 @@ class HighscoreWindow(tk.Toplevel):
             self.tree.insert("", tk.END, values=(
                 score.get("name", ""),
                 score.get("level", 0),
+                score.get("bosses_defeated", 0),
+                resources_str,
                 best_equipment,
                 copper_formatted
             ))
