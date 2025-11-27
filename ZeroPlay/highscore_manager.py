@@ -45,6 +45,8 @@ def save_highscore(character):
         "klasse": character.klasse,
         "level": character.level,
         "copper": character.copper,
+        "bosses_defeated": character.bosses_defeated,
+        "resources": character.resources,
         "best_weapon": best_weapon,
         "best_head": best_head,
         "best_chest": best_chest
