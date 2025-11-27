@@ -156,13 +156,13 @@ class BlacksmithWindow(tk.Toplevel):
 
         success, message = self.blacksmith.upgrade_item(self.player, self.selected_item)
 
+        # Refresh the display immediately after the upgrade attempt to show resource changes.
+        self.update_display()
+
         if success:
             messagebox.showinfo("Erfolg!", message, parent=self)
         else:
             messagebox.showwarning("Fehler", message, parent=self)
-
-        # Refresh the display regardless of outcome
-        self.update_display()
 
 
     def on_close(self):
