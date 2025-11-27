@@ -34,6 +34,7 @@ class Character:
         self.resources = {}
         self.boss_tier = 0
         self.bosses_defeated = 0
+        self.is_immortal = False
 
         # Derived stats
         self.max_lp = 0
@@ -141,6 +142,8 @@ class Character:
 
     def take_damage(self, damage):
         """Reduces the character's HP by a given amount."""
+        if self.is_immortal:
+            return  # Don't take any damage if immortal
         self.current_lp -= damage
         if self.current_lp < 0:
             self.current_lp = 0
