@@ -126,6 +126,8 @@ class BlacksmithWindow(tk.Toplevel):
 
         # Check if max level is reached
         if self.selected_item.upgrade_level >= max_upgrades:
+            max_stats_text = "Aktuelle Werte (Max):\n" + "\n".join([f"  {stat}: {val} (Max)" for stat, val in self.selected_item.stats_boost.items()])
+            self.current_stats_label.config(text=max_stats_text)
             self.next_stats_label.config(text="Maximale Stufe erreicht")
             self.cost_label.config(text="")
             self.upgrade_button.config(state=tk.DISABLED)
