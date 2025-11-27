@@ -825,8 +825,16 @@ class RpgGui(ttk.Frame):
             self.cheat_buffer = self.cheat_buffer[-len(self.cheat_code):]
 
         if self.cheat_buffer == self.cheat_code:
-            self.player.is_immortal = True
-            self.add_to_log("CHEAT AKTIVIERT: Unsterblichkeit!")
+            # Toggle immortality
+            self.player.is_immortal = not self.player.is_immortal
+
+            if self.player.is_immortal:
+                # If cheat is now active, also set the permanent flag
+                self.player.cheat_activated = True
+                self.add_to_log("CHEAT AKTIVIERT: Unsterblichkeit!")
+            else:
+                self.add_to_log("CHEAT DEAKTIVIERT: Sterblichkeit wiederhergestellt.")
+
             self.cheat_buffer = "" # Reset buffer after activation
 
 

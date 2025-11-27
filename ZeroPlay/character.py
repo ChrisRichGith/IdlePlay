@@ -35,6 +35,7 @@ class Character:
         self.boss_tier = 0
         self.bosses_defeated = 0
         self.is_immortal = False
+        self.cheat_activated = False
 
         # Derived stats
         self.max_lp = 0

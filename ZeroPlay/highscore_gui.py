@@ -73,13 +73,17 @@ class HighscoreWindow(tk.Toplevel):
             if not resources_str:
                 resources_str = "N/A"
 
+            player_name = score.get("name", "")
+            if score.get("cheat_activated", False):
+                player_name += " (Cheat)"
+
             best_equipment = (
                 f"Waffe: {score.get('best_weapon', 'N/A')}, "
                 f"Kopf: {score.get('best_head', 'N/A')}, "
                 f"Brust: {score.get('best_chest', 'N/A')}"
             )
             self.tree.insert("", tk.END, values=(
-                score.get("name", ""),
+                player_name,
                 score.get("level", 0),
                 score.get("bosses_defeated", 0),
                 resources_str,
