@@ -33,6 +33,7 @@ class Character:
         self.equipment = {'Kopf': None, 'Brust': None, 'Waffe': None}
         self.resources = {}
         self.boss_tier = 0
+        self.bosses_defeated = 0
 
         # Derived stats
         self.max_lp = 0
