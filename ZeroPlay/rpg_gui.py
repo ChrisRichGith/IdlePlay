@@ -8,6 +8,7 @@ import random
 import time
 from PIL import Image, ImageTk
 
+from boss import Boss
 from character import Character
 from quest import Quest
 from trader import Trader
@@ -104,6 +105,12 @@ class RpgGui(ttk.Frame):
         self._setup_string_vars()
         self.create_widgets()
         self.update_display()
+
+        # Cheat code setup
+        self.cheat_buffer = ""
+        self.cheat_code = "ordilogicus"
+        # Bind to the top-level window to capture all key events
+        self.master.bind("<Key>", self._handle_keypress)
 
     def _setup_string_vars(self):
         """Creates tkinter StringVars to link data to labels."""
@@ -770,10 +777,24 @@ class RpgGui(ttk.Frame):
         boss_data = BOSS_TIERS[current_tier]
         player_ilvl = self.player.get_item_level()
 
+        # Create a temporary boss instance to get scaled stats
+        temp_boss = Boss(
+            name=boss_data["name"],
+            hp=boss_data["hp"],
+            damage_range=boss_data["damage"],
+            image_path=boss_data["image_path"],
+            item_level=player_ilvl
+        )
+
         title = "Warnung"
-        message = f"Du bist dabei {boss_data['name']} (Stufe {player_ilvl}) herauszufordern.\n\n" \
-                  "Der Kampf kann nicht abgebrochen werden und die Gefahr des Todes ist sehr hoch.\n\n" \
-                  "Möchtest du fortfahren?"
+        message = (
+            f"Du bist dabei, {temp_boss.name} (Stufe {player_ilvl}) herauszufordern.\n\n"
+            f"Werte des Bosses:\n"
+            f"- Lebenspunkte: {temp_boss.max_hp}\n"
+            f"- Schaden: {temp_boss.damage_range[0]} - {temp_boss.damage_range[1]}\n\n"
+            "Der Kampf kann nicht abgebrochen werden und die Gefahr des Todes ist sehr hoch.\n\n"
+            "Möchtest du fortfahren?"
+        )
 
         if messagebox.askyesno(title, message, parent=self):
             self.boss_arena_button.config(state=tk.DISABLED)
@@ -810,6 +831,27 @@ class RpgGui(ttk.Frame):
 
         # Show the custom game over window
         GameOverWindow(self, self.player, on_close_callback=self.callbacks['game_over'])
+
+    def _handle_keypress(self, event):
+        """Handles key presses to check for cheat codes."""
+        self.cheat_buffer += event.char
+        # Keep the buffer trimmed to the length of the cheat code
+        if len(self.cheat_buffer) > len(self.cheat_code):
+            self.cheat_buffer = self.cheat_buffer[-len(self.cheat_code):]
+
+        if self.cheat_buffer == self.cheat_code:
+            # Toggle immortality
+            self.player.is_immortal = not self.player.is_immortal
+
+            if self.player.is_immortal:
+                # If cheat is now active, also set the permanent flag
+                self.player.cheat_activated = True
+                self.add_to_log("CHEAT AKTIVIERT: Unsterblichkeit!")
+            else:
+                self.add_to_log("CHEAT DEAKTIVIERT: Sterblichkeit wiederhergestellt.")
+
+            self.cheat_buffer = "" # Reset buffer after activation
+
 
 class Tooltip:
     """
