@@ -141,3 +141,7 @@ class Item:
         # The score is the total stat points multiplied by the rarity modifier, squared to create a wider gap
         score = total_stats * (rarity_modifier ** 2)
         return int(score)
+
+    def is_boss_item(self):
+        """Checks if the item is a boss item by its name prefix."""
+        return self.original_name.startswith("Boss ")
