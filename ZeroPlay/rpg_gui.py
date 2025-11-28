@@ -786,12 +786,21 @@ class RpgGui(ttk.Frame):
             item_level=player_ilvl
         )
 
+        # Get player combat stats for comparison
+        player_stats = self.player.get_total_stats()
+        main_stat_val = player_stats.get(self.player.main_stat, 0)
+        min_damage = main_stat_val // 2
+        max_damage = main_stat_val
+
         title = "Warnung"
         message = (
             f"Du bist dabei, {temp_boss.name} (Stufe {player_ilvl}) herauszufordern.\n\n"
-            f"Werte des Bosses:\n"
-            f"- Lebenspunkte: {temp_boss.max_hp}\n"
-            f"- Schaden: {temp_boss.damage_range[0]} - {temp_boss.damage_range[1]}\n\n"
+            "--- Werte des Bosses ---\n"
+            f"Lebenspunkte: {temp_boss.max_hp}\n"
+            f"Schaden: {temp_boss.damage_range[0]} - {temp_boss.damage_range[1]}\n\n"
+            "--- Deine Werte ---\n"
+            f"Lebenspunkte: {self.player.current_lp} / {self.player.max_lp}\n"
+            f"Schaden: {min_damage} - {max_damage}\n\n"
             "Der Kampf kann nicht abgebrochen werden und die Gefahr des Todes ist sehr hoch.\n\n"
             "Möchtest du fortfahren?"
         )
