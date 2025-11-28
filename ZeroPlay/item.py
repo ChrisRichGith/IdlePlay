@@ -141,3 +141,22 @@ class Item:
         # The score is the total stat points multiplied by the rarity modifier, squared to create a wider gap
         score = total_stats * (rarity_modifier ** 2)
         return int(score)
+
+    def is_boss_item(self):
+        """Checks if the item is a boss item by its name prefix."""
+        return self.original_name.startswith("Boss ")
+
+    def get_base_item_score(self):
+        """
+        Calculates a single 'item level' score based on BASE stats and rarity,
+        ignoring any blacksmith upgrades.
+        """
+        if not self.base_stats or self.item_type != "Ausrüstung":
+            return 0
+
+        total_stats = sum(self.base_stats.values())
+        rarity_modifier = RARITIES.get(self.rarity, {}).get("modifier", 1.0)
+
+        # The score is the total stat points multiplied by the rarity modifier, squared to create a wider gap
+        score = total_stats * (rarity_modifier ** 2)
+        return int(score)

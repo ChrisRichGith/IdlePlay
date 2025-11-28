@@ -161,10 +161,25 @@ class TraderWindow:
     def buy_upgrade(self):
         """Buys an inventory upgrade."""
         cost = self.trader.get_upgrade_cost()
+
+        # Check if the feature is about to be unlocked
+        was_below_50 = self.player.max_inventory_size < 50
+
         upgraded = self.trader.buy_inventory_upgrade(self.player)
+
         if upgraded:
             messagebox.showinfo("Upgrade erfolgreich!", f"Inventar für {format_currency(cost)} erweitert!", parent=self.window)
             self.update_display()
+
+            # Show the one-time notification if the threshold was crossed
+            if was_below_50 and self.player.max_inventory_size >= 50 and not self.player.autosell_unlocked_notified:
+                self.player.autosell_unlocked_notified = True
+                messagebox.showinfo(
+                    "Feature freigeschaltet!",
+                    "Du hast 50+ Inventarplätze!\n\n"
+                    "Gegenstände, die kein Upgrade für dich sind, werden ab jetzt beim Aufheben automatisch verkauft.",
+                    parent=self.window
+                )
         else:
             messagebox.showerror("Nicht genug Münzen", "Du kannst dir dieses Upgrade nicht leisten.", parent=self.window)
 
