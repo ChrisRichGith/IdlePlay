@@ -794,21 +794,6 @@ class RpgGui(ttk.Frame):
         min_damage = main_stat_val // 2
         max_damage = main_stat_val
 
-        # Create a temporary boss instance to get scaled stats
-        temp_boss = Boss(
-            name=boss_data["name"],
-            hp=boss_data["hp"],
-            damage_range=boss_data["damage"],
-            image_path=boss_data["image_path"],
-            item_level=player_ilvl
-        )
-
-        # Get player combat stats for comparison
-        player_stats = self.player.get_total_stats()
-        main_stat_val = player_stats.get(self.player.main_stat, 0)
-        min_damage = main_stat_val // 2
-        max_damage = main_stat_val
-
         title = "Warnung"
         message = (
             f"Du bist dabei, {temp_boss.name} (Stufe {actual_player_ilvl}) herauszufordern.\n\n"
