@@ -270,6 +270,22 @@ class Character:
             return 0
         return total_score // equipped_items
 
+    def get_base_item_level(self):
+        """
+        Calculates the average item score of equipped gear based on BASE stats,
+        ignoring blacksmith upgrades.
+        """
+        total_score = 0
+        equipped_items = 0
+        for item in self.equipment.values():
+            if item:
+                total_score += item.get_base_item_score()
+                equipped_items += 1
+
+        if equipped_items == 0:
+            return 0
+        return total_score // equipped_items
+
     def display_status(self):
         """DEPRECATED: Prints a detailed status screen for the character."""
         # This method is no longer used by the GUI but kept for potential CLI debugging.
