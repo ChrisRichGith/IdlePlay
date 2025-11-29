@@ -24,7 +24,7 @@ class Boss:
 
         # Scale stats based on item level
         # We use a non-linear formula to make gear more impactful
-        scaling_factor = 1 + (item_level / 10) ** 1.2
+        scaling_factor = 1 + (item_level / 15) ** 0.9
 
         self.max_hp = int(hp * scaling_factor)
         self.current_hp = self.max_hp
