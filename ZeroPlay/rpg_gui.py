@@ -567,58 +567,53 @@ class RpgGui(ttk.Frame):
             self._animate_resource_collection(symbol, start_coords_canvas)
 
     def _animate_resource_collection(self, symbol, start_coords_canvas):
-        """Animates the resource symbol flying on a top-level window."""
-        # 1. Create a frameless Toplevel window for the animation
+        """Animates the resource symbol flying on a top-level window using a Canvas for better transparency."""
         anim_window = tk.Toplevel(self)
         anim_window.overrideredirect(True)
-        # Use a transparent color; this works on Windows and some Linux WMs.
-        # A solid color like 'black' is used for the label bg as a fallback.
         try:
             anim_window.attributes('-transparentcolor', 'black')
         except tk.TclError:
-            pass  # This feature is not supported on all platforms.
+            pass
 
-        # 2. Create the label with the symbol inside the Toplevel
         initial_font_size = 14
-        anim_label = ttk.Label(anim_window, text=symbol, font=("", initial_font_size),
-                               background='black', foreground='white')
-        anim_label.pack()
+        canvas_size = initial_font_size + 10
 
-        # 3. Calculate absolute start and end screen coordinates
+        # Use a Canvas for cleaner transparency
+        anim_canvas = tk.Canvas(anim_window, width=canvas_size, height=canvas_size, bg='black', highlightthickness=0)
+        anim_canvas.pack()
+        text_id = anim_canvas.create_text(canvas_size/2, canvas_size/2, text=symbol, fill="white", font=("", initial_font_size))
+
         canvas_x_abs = self.minigame_canvas.winfo_rootx()
         canvas_y_abs = self.minigame_canvas.winfo_rooty()
-        start_x = canvas_x_abs + start_coords_canvas[0]
-        start_y = canvas_y_abs + start_coords_canvas[1]
+        start_x = canvas_x_abs + start_coords_canvas[0] - canvas_size/2
+        start_y = canvas_y_abs + start_coords_canvas[1] - canvas_size/2
 
         end_x = self.resources_label.winfo_rootx() + self.resources_label.winfo_width() // 2
         end_y = self.resources_label.winfo_rooty()
 
-        # 4. Position the window at the start and lift it to the top
         anim_window.geometry(f"+{int(start_x)}+{int(start_y)}")
         anim_window.lift()
 
         start_time = time.time()
-        duration = 0.8  # Use the already adjusted duration
+        duration = 0.8
 
         def animation_step():
             elapsed = time.time() - start_time
             progress = min(elapsed / duration, 1.0)
 
-            # Interpolate the window's position
             new_x = start_x + (end_x - start_x) * progress
             new_y = start_y + (end_y - start_y) * progress
             anim_window.geometry(f"+{int(new_x)}+{int(new_y)}")
 
-            # Interpolate the font size for the zoom-out effect
             new_font_size = int(initial_font_size * (1 - progress))
             if new_font_size > 1:
-                anim_label.config(font=("", new_font_size))
+                anim_canvas.itemconfig(text_id, font=("", new_font_size))
 
             if progress < 1.0:
                 self.after(20, animation_step)
             else:
                 anim_window.destroy()
-                self.update_display()  # Update the counter at the very end
+                self.update_display()
 
         animation_step()
 
