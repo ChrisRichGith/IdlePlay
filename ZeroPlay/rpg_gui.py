@@ -15,7 +15,8 @@ from trader import Trader
 from trader_gui import TraderWindow
 from blacksmith_gui import BlacksmithWindow
 from boss_arena_gui import BossArenaWindow
-from save_load_system import save_game, save_highscore
+from save_load_system import save_game
+from highscore_manager import save_highscore
 from utils import format_currency, center_window
 from game_over_gui import GameOverWindow
 from game_data import BOSS_TIERS
