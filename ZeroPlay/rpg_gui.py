@@ -102,15 +102,25 @@ class RpgGui(ttk.Frame):
         self.next_orb_spawn_delay = random.uniform(2, 5)
         self.minigame_running = False # Initial state for the minigame
 
+        # Cheat code tracking
+        self.typed_string = ""
+        self.master.bind("<Key>", self.handle_keypress)
+
         self._setup_string_vars()
         self.create_widgets()
         self.update_display()
 
-        # Cheat code setup
-        self.cheat_buffer = ""
-        self.cheat_code = "ordilogicus"
-        # Bind to the top-level window to capture all key events
-        self.master.bind("<Key>", self._handle_keypress)
+    def handle_keypress(self, event):
+        """Handles key presses for cheat codes."""
+        self.typed_string += event.char.lower()
+        # Keep the last 20 characters to avoid overly long strings
+        self.typed_string = self.typed_string[-20:]
+
+        if "showmethemoney" in self.typed_string:
+            self.player.add_cheat_resources()
+            self.set_loot_text("Cheat: +100 Eisenerz, +100 Juwel")
+            self.update_display()
+            self.typed_string = "" # Reset after use
 
     def _setup_string_vars(self):
         """Creates tkinter StringVars to link data to labels."""

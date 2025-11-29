@@ -34,6 +34,7 @@ class Character:
         self.resources = {}
         self.boss_tier = 0
         self.autosell_unlocked_notified = False
+        self.cheat_activated = False # Flag for highscore
 
         # Derived stats
         self.max_lp = 0
@@ -178,6 +179,12 @@ class Character:
             self.resources[resource_name] += amount
         else:
             self.resources[resource_name] = amount
+
+    def add_cheat_resources(self):
+        """Adds 100 of each resource for testing and flags the character."""
+        self.cheat_activated = True
+        self.add_resource("Eisenerz", 100)
+        self.add_resource("Juwel", 100)
 
     def remove_resources(self, cost):
         """
