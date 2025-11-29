@@ -8,6 +8,7 @@ import random
 import time
 from PIL import Image, ImageTk
 
+from boss import Boss
 from character import Character
 from quest import Quest
 from trader import Trader
@@ -15,6 +16,7 @@ from trader_gui import TraderWindow
 from blacksmith_gui import BlacksmithWindow
 from boss_arena_gui import BossArenaWindow
 from save_load_system import save_game
+from highscore_manager import save_highscore
 from utils import format_currency, center_window
 from game_over_gui import GameOverWindow
 from game_data import BOSS_TIERS
@@ -101,9 +103,43 @@ class RpgGui(ttk.Frame):
         self.next_orb_spawn_delay = random.uniform(2, 5)
         self.minigame_running = False # Initial state for the minigame
 
+        # Cheat code tracking
+        self.typed_string = ""
+        self.master.bind("<Key>", self.handle_keypress)
+
         self._setup_string_vars()
         self.create_widgets()
         self.update_display()
+
+    def handle_keypress(self, event):
+        """Handles key presses for cheat codes."""
+        self.typed_string += event.char.lower()
+        # Keep the last 20 characters to avoid overly long strings
+        self.typed_string = self.typed_string[-20:]
+
+        # --- God Mode Cheat ---
+        if "ordilogicus" in self.typed_string:
+            self.pause_quest_loop()
+            # Toggle god_mode and set the permanent cheat flag
+            if not hasattr(self.player, 'god_mode'):
+                self.player.god_mode = False # Initialize if it doesn't exist
+            self.player.god_mode = not self.player.god_mode
+            self.player.cheat_activated = True # Mark as cheater for highscore
+
+            status = "aktiviert" if self.player.god_mode else "deaktiviert"
+            self.set_loot_text(f"Cheat: Unverwundbarkeit {status}")
+            self.update_display()
+            self.typed_string = "" # Reset after use
+            self.resume_quest_loop()
+
+        # --- Resource Cheat ---
+        elif "showmethemoney" in self.typed_string:
+            self.pause_quest_loop()
+            self.player.add_cheat_resources() # This method also sets cheat_activated
+            self.set_loot_text("Cheat: +100 Eisenerz, +100 Juwel")
+            self.update_display()
+            self.typed_string = "" # Reset after use
+            self.resume_quest_loop()
 
     def _setup_string_vars(self):
         """Creates tkinter StringVars to link data to labels."""
@@ -544,76 +580,46 @@ class RpgGui(ttk.Frame):
                 self.next_orb_spawn_delay = random.uniform(2, 5)
 
     def on_orb_click(self, orb_id):
-        """Handles the click on a resource orb."""
+        """Handles the click on a resource orb with a zoom-pulse animation."""
         if orb_id in self.minigame_orbs:
-            # Immediately get all info and then remove the orb from the canvas and dict
-            # to prevent any race conditions or double-clicks.
             resource_data = self.minigame_orbs.pop(orb_id)
-            symbol = self.minigame_canvas.itemcget(orb_id, 'text')
-            start_coords_canvas = self.minigame_canvas.coords(orb_id)
-            self.minigame_canvas.delete(orb_id)
-
-            # Add the resource to the player's inventory
             self.player.add_resource(resource_data['resource'], 1)
 
-            # Start the top-level animation
-            self._animate_resource_collection(symbol, start_coords_canvas)
+            # --- New Zoom-Pulse Animation ---
+            start_time = time.time()
+            duration = 0.3  # 300ms animation
+            initial_font_size = 14
+            max_font_size = 24
 
-    def _animate_resource_collection(self, symbol, start_coords_canvas):
-        """Animates the resource symbol flying on a top-level window."""
-        # 1. Create a frameless Toplevel window for the animation
-        anim_window = tk.Toplevel(self)
-        anim_window.overrideredirect(True)
-        # Use a transparent color; this works on Windows and some Linux WMs.
-        # A solid color like 'black' is used for the label bg as a fallback.
-        try:
-            anim_window.attributes('-transparentcolor', 'black')
-        except tk.TclError:
-            pass  # This feature is not supported on all platforms.
+            def pulse_step():
+                elapsed = time.time() - start_time
+                progress = min(elapsed / duration, 1.0)
 
-        # 2. Create the label with the symbol inside the Toplevel
-        initial_font_size = 14
-        anim_label = ttk.Label(anim_window, text=symbol, font=("", initial_font_size),
-                               background='black', foreground='white')
-        anim_label.pack()
+                # Go from initial to max size in the first half, then back down
+                if progress < 0.5:
+                    size_progress = progress * 2
+                else:
+                    size_progress = (1 - progress) * 2
 
-        # 3. Calculate absolute start and end screen coordinates
-        canvas_x_abs = self.minigame_canvas.winfo_rootx()
-        canvas_y_abs = self.minigame_canvas.winfo_rooty()
-        start_x = canvas_x_abs + start_coords_canvas[0]
-        start_y = canvas_y_abs + start_coords_canvas[1]
+                current_size = int(initial_font_size + (max_font_size - initial_font_size) * size_progress)
 
-        end_x = self.resources_label.winfo_rootx() + self.resources_label.winfo_width() // 2
-        end_y = self.resources_label.winfo_rooty()
+                try:
+                    self.minigame_canvas.itemconfig(orb_id, font=("", current_size))
+                except tk.TclError:
+                    # Orb might have been deleted if another function cleared it, just stop.
+                    return
 
-        # 4. Position the window at the start and lift it to the top
-        anim_window.geometry(f"+{int(start_x)}+{int(start_y)}")
-        anim_window.lift()
+                if progress < 1.0:
+                    self.after(15, pulse_step)
+                else:
+                    # Animation finished, now delete the orb and update the UI
+                    try:
+                        self.minigame_canvas.delete(orb_id)
+                    except tk.TclError:
+                        pass # Ignore if already gone
+                    self.update_display()
 
-        start_time = time.time()
-        duration = 0.8  # Use the already adjusted duration
-
-        def animation_step():
-            elapsed = time.time() - start_time
-            progress = min(elapsed / duration, 1.0)
-
-            # Interpolate the window's position
-            new_x = start_x + (end_x - start_x) * progress
-            new_y = start_y + (end_y - start_y) * progress
-            anim_window.geometry(f"+{int(new_x)}+{int(new_y)}")
-
-            # Interpolate the font size for the zoom-out effect
-            new_font_size = int(initial_font_size * (1 - progress))
-            if new_font_size > 1:
-                anim_label.config(font=("", new_font_size))
-
-            if progress < 1.0:
-                self.after(20, animation_step)
-            else:
-                anim_window.destroy()
-                self.update_display()  # Update the counter at the very end
-
-        animation_step()
+            pulse_step()
 
 
     def advance_quest(self):
@@ -643,12 +649,20 @@ class RpgGui(ttk.Frame):
                 messagebox.showwarning("Niedrige Lebenspunkte!", "Deine Lebenspunkte sind kritisch niedrig! Auto-Quest pausiert. Heile dich!")
         if self.current_quest.is_complete():
             gold, xp, item = self.current_quest.generate_reward(self.player)
-            item_added = self.player.add_loot(gold, item)
+            loot_status, received_item = self.player.add_loot(gold, item)
             level_up_info = self.player.add_xp(xp)
+
             loot_message = f"Loot: {format_currency(gold)}, {xp} XP"
-            if item:
-                loot_message += f" und '{item.name}'" if item_added else f" (aber '{item.name}' passte nicht ins Inventar!)"
+            if received_item:
+                if loot_status == "added":
+                    loot_message += f" und '{received_item.name}'"
+                elif loot_status == "inventory_full":
+                    loot_message += f" (aber '{received_item.name}' passte nicht ins Inventar!)"
+                elif loot_status == "auto_sold":
+                    loot_message += f" und '{received_item.name}' (automatisch verkauft für {format_currency(received_item.value)})"
+
             self.set_loot_text(loot_message)
+
             if level_up_info:
                 self.pause_quest_loop()
                 level_up_summary = f"Level Up! Du bist jetzt Level {self.player.level}!\n\nAttribut-Boni:\n" + "\n".join(level_up_info)
@@ -768,16 +782,41 @@ class RpgGui(ttk.Frame):
             return
 
         boss_data = BOSS_TIERS[current_tier]
-        player_ilvl = self.player.get_item_level()
+        # Use BASE item level for scaling the boss to ignore blacksmith upgrades
+        base_player_ilvl = self.player.get_base_item_level()
+        actual_player_ilvl = self.player.get_item_level() # For display and passing to the arena window
+
+        # Create a temporary boss instance to get scaled stats
+        temp_boss = Boss(
+            name=boss_data["name"],
+            hp=boss_data["hp"],
+            damage_range=boss_data["damage"],
+            image_path=boss_data["image_path"],
+            item_level=base_player_ilvl # Scale boss based on non-upgraded gear
+        )
+
+        # Get player combat stats for comparison
+        player_stats = self.player.get_total_stats()
+        main_stat_val = player_stats.get(self.player.main_stat, 0)
+        min_damage = main_stat_val // 2
+        max_damage = main_stat_val
 
         title = "Warnung"
-        message = f"Du bist dabei {boss_data['name']} (Stufe {player_ilvl}) herauszufordern.\n\n" \
-                  "Der Kampf kann nicht abgebrochen werden und die Gefahr des Todes ist sehr hoch.\n\n" \
-                  "Möchtest du fortfahren?"
+        message = (
+            f"Du bist dabei, {temp_boss.name} (Stufe {actual_player_ilvl}) herauszufordern.\n\n"
+            "--- Werte des Bosses ---\n"
+            f"Lebenspunkte: {temp_boss.max_hp}\n"
+            f"Schaden: {temp_boss.damage_range[0]} - {temp_boss.damage_range[1]}\n\n"
+            "--- Deine Werte ---\n"
+            f"Lebenspunkte: {self.player.current_lp} / {self.player.max_lp}\n"
+            f"Schaden: {min_damage} - {max_damage}\n\n"
+            "Der Kampf kann nicht abgebrochen werden und die Gefahr des Todes ist sehr hoch.\n\n"
+            "Möchtest du fortfahren?"
+        )
 
         if messagebox.askyesno(title, message, parent=self):
             self.boss_arena_button.config(state=tk.DISABLED)
-            BossArenaWindow(self, self.player, boss_data, player_ilvl, on_close_callback=self.on_boss_arena_close)
+            BossArenaWindow(self, self.player, boss_data, base_player_ilvl, on_close_callback=self.on_boss_arena_close)
         else:
             self.resume_quest_loop()
 
@@ -794,6 +833,10 @@ class RpgGui(ttk.Frame):
 
     def handle_game_over(self):
         self.game_over = True
+
+        # Save the character's score before showing the game over screen
+        save_highscore(self.player)
+
         try:
             img = Image.open("assets/grabstein.png")
             img.thumbnail((220, 280))
