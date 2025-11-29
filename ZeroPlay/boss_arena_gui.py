@@ -42,6 +42,14 @@ class BossArenaWindow(tk.Toplevel):
         self.player_is_empowered = False
         self.player_won = False
         self.is_defending = False
+
+        self.DEFENSE_SYMBOLS = {
+            1: "⚔️",  # Konter-Angriff
+            2: "💪",  # Verstärkter Angriff
+            3: "❤️",  # Leichte Heilung
+            4: "💀"   # Boss schwächen
+        }
+
         self._setup_string_vars()
         self.create_widgets()
         self.update_display()
@@ -114,19 +122,19 @@ class BossArenaWindow(tk.Toplevel):
         self.defend_button.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
 
         # Dice Roll Legend
-        legend_frame = ttk.LabelFrame(middle_frame, text="🎲 Verteidigungs-Legende", padding="10")
+        legend_frame = ttk.LabelFrame(middle_frame, text="Verteidigungs-Legende", padding="10")
         legend_frame.grid(row=2, column=0, sticky="nsew", pady=(10, 0))
 
         legend_text = (
-            "1: Konter-Angriff\n"
-            "2: Verstärkter nächster Angriff\n"
-            "3: Leichte Heilung\n"
-            "4: Boss schwächen"
+            f"{self.DEFENSE_SYMBOLS[1]}: Konter-Angriff\n"
+            f"{self.DEFENSE_SYMBOLS[2]}: Verstärkter nächster Angriff\n"
+            f"{self.DEFENSE_SYMBOLS[3]}: Leichte Heilung\n"
+            f"{self.DEFENSE_SYMBOLS[4]}: Boss schwächen"
         )
         ttk.Label(legend_frame, text=legend_text, justify=tk.LEFT).pack(anchor="w")
 
-        # Dice label for animation (initially hidden)
-        self.dice_label = ttk.Label(self, text="🎲", font=("", 36))
+        # Animation label for defense effect
+        self.animation_label = ttk.Label(self, text="", font=("", 48))
 
 
         # --- Boss Frame (Right) ---
@@ -185,32 +193,39 @@ class BossArenaWindow(tk.Toplevel):
         self.log_text.see(tk.END)
         self.log_text.config(state=tk.DISABLED)
 
-    def _animate_dice_roll(self, roll, callback):
-        """Animates a dice emoji with a zoom effect."""
-        self.dice_label.config(text="🎲", font=("", 1))
-        self.dice_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+    def _animate_slot_machine(self, final_roll, callback):
+        """Animates a slot machine effect, stopping on the final roll's symbol."""
+        self.animation_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
+        symbols = list(self.DEFENSE_SYMBOLS.values())
+        random.shuffle(symbols)
+
+        duration_ms = 2000  # Total animation time
         start_time = time.time()
-        duration = 0.6  # 600ms for zoom-in
 
-        def zoom_step():
-            elapsed = time.time() - start_time
-            progress = min(elapsed / duration, 1.0)
+        initial_delay = 50
+        current_delay = initial_delay
 
-            # Animate font size from 1 to 72
-            font_size = int(1 + progress * 71)
-            self.dice_label.config(font=("", font_size))
+        def spin_step():
+            nonlocal current_delay
+            # Pick a random symbol to display
+            symbol = random.choice(symbols)
+            self.animation_label.config(text=symbol)
 
-            if progress < 1.0:
-                self.after(15, zoom_step)
+            elapsed_ms = (time.time() - start_time) * 1000
+
+            if elapsed_ms < duration_ms:
+                # Slow down the spinning over time
+                current_delay = int(initial_delay + (elapsed_ms / duration_ms) * 150)
+                self.after(current_delay, spin_step)
             else:
-                # After zoom, hide dice, show number, then call callback
-                self.dice_label.place_forget()
-                self.dice_label.config(text=f"{roll}", font=("", 48))
-                self.dice_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
-                self.after(700, lambda: (self.dice_label.place_forget(), callback()))
+                # Animation finished, show the final result
+                final_symbol = self.DEFENSE_SYMBOLS[final_roll]
+                self.animation_label.config(text=final_symbol)
+                # Hold the final symbol for a moment, then hide and call back
+                self.after(1000, lambda: (self.animation_label.place_forget(), callback()))
 
-        zoom_step()
+        spin_step()
 
     def player_defend(self):
         """Handles the player's defend action with a random dice roll effect."""
@@ -224,7 +239,8 @@ class BossArenaWindow(tk.Toplevel):
         roll = random.randint(1, 4)
 
         def handle_roll_result():
-            self.add_to_log(f"Du verteidigst dich und würfelst eine {roll}!")
+            symbol = self.DEFENSE_SYMBOLS[roll]
+            self.add_to_log(f"Verteidigungsergebnis: {symbol}")
             if roll == 1:
                 # 1. Counter-attack
                 counter_damage = self.player.get_total_stats()[self.player.main_stat] // 4
@@ -246,7 +262,7 @@ class BossArenaWindow(tk.Toplevel):
 
             self.after(1000, self.boss_turn)
 
-        self._animate_dice_roll(roll, handle_roll_result)
+        self._animate_slot_machine(roll, handle_roll_result)
 
     def player_attack(self):
         """Handles the player's attack action."""
