@@ -551,66 +551,46 @@ class RpgGui(ttk.Frame):
                 self.next_orb_spawn_delay = random.uniform(2, 5)
 
     def on_orb_click(self, orb_id):
-        """Handles the click on a resource orb."""
+        """Handles the click on a resource orb with a zoom-pulse animation."""
         if orb_id in self.minigame_orbs:
-            # Immediately get all info and then remove the orb from the canvas and dict
-            # to prevent any race conditions or double-clicks.
             resource_data = self.minigame_orbs.pop(orb_id)
-            symbol = self.minigame_canvas.itemcget(orb_id, 'text')
-            start_coords_canvas = self.minigame_canvas.coords(orb_id)
-            self.minigame_canvas.delete(orb_id)
-
-            # Add the resource to the player's inventory
             self.player.add_resource(resource_data['resource'], 1)
 
-            # Start the top-level animation
-            self._animate_resource_collection(symbol, start_coords_canvas)
+            # --- New Zoom-Pulse Animation ---
+            start_time = time.time()
+            duration = 0.3  # 300ms animation
+            initial_font_size = 14
+            max_font_size = 24
 
-    def _animate_resource_collection(self, symbol, start_coords_canvas):
-        """Animates the resource symbol flying across the main window."""
-        initial_font_size = 14
-        anim_label = ttk.Label(self.master, text=symbol, font=("", initial_font_size))
+            def pulse_step():
+                elapsed = time.time() - start_time
+                progress = min(elapsed / duration, 1.0)
 
-        # Calculate coordinates relative to the root window
-        root_x = self.master.winfo_rootx()
-        root_y = self.master.winfo_rooty()
+                # Go from initial to max size in the first half, then back down
+                if progress < 0.5:
+                    size_progress = progress * 2
+                else:
+                    size_progress = (1 - progress) * 2
 
-        canvas_x_abs = self.minigame_canvas.winfo_rootx()
-        canvas_y_abs = self.minigame_canvas.winfo_rooty()
-        start_x = (canvas_x_abs - root_x) + start_coords_canvas[0]
-        start_y = (canvas_y_abs - root_y) + start_coords_canvas[1]
+                current_size = int(initial_font_size + (max_font_size - initial_font_size) * size_progress)
 
-        end_x = (self.resources_label.winfo_rootx() - root_x) + self.resources_label.winfo_width() // 2
-        end_y = (self.resources_label.winfo_rooty() - root_y)
+                try:
+                    self.minigame_canvas.itemconfig(orb_id, font=("", current_size))
+                except tk.TclError:
+                    # Orb might have been deleted if another function cleared it, just stop.
+                    return
 
-        # Start animation
-        anim_label.place(x=start_x, y=start_y, anchor="center")
-        anim_label.lift()
+                if progress < 1.0:
+                    self.after(15, pulse_step)
+                else:
+                    # Animation finished, now delete the orb and update the UI
+                    try:
+                        self.minigame_canvas.delete(orb_id)
+                    except tk.TclError:
+                        pass # Ignore if already gone
+                    self.update_display()
 
-        start_time = time.time()
-        duration = 0.8
-
-        def animation_step():
-            elapsed = time.time() - start_time
-            progress = min(elapsed / duration, 1.0)
-
-            # Interpolate position
-            new_x = start_x + (end_x - start_x) * progress
-            new_y = start_y + (end_y - start_y) * progress
-            anim_label.place(x=new_x, y=new_y, anchor="center")
-
-            # Interpolate font size
-            new_font_size = int(initial_font_size * (1 - progress))
-            if new_font_size > 1:
-                anim_canvas.itemconfig(text_id, font=("", new_font_size))
-
-            if progress < 1.0:
-                self.after(20, animation_step)
-            else:
-                anim_label.destroy()
-                self.update_display()
-
-        animation_step()
+            pulse_step()
 
 
     def advance_quest(self):
