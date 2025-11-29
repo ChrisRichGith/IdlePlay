@@ -52,8 +52,14 @@ def save_highscore(character):
 
     scores.append(new_score)
 
+    # Sort the scores by level in descending order
+    scores.sort(key=lambda x: x.get('level', 0), reverse=True)
+
+    # Keep only the top 10 scores
+    top_scores = scores[:10]
+
     try:
         with open(HIGHSCORE_FILE, 'w', encoding='utf-8') as f:
-            json.dump(scores, f, indent=4, ensure_ascii=False)
+            json.dump(top_scores, f, indent=4, ensure_ascii=False)
     except IOError as e:
         print(f"Fehler beim Speichern der Highscores: {e}")
