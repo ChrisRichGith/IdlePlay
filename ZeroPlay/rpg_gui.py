@@ -8,6 +8,7 @@ import random
 import time
 from PIL import Image, ImageTk
 
+from boss import Boss
 from character import Character
 from quest import Quest
 from trader import Trader
@@ -643,12 +644,20 @@ class RpgGui(ttk.Frame):
                 messagebox.showwarning("Niedrige Lebenspunkte!", "Deine Lebenspunkte sind kritisch niedrig! Auto-Quest pausiert. Heile dich!")
         if self.current_quest.is_complete():
             gold, xp, item = self.current_quest.generate_reward(self.player)
-            item_added = self.player.add_loot(gold, item)
+            loot_status, received_item = self.player.add_loot(gold, item)
             level_up_info = self.player.add_xp(xp)
+
             loot_message = f"Loot: {format_currency(gold)}, {xp} XP"
-            if item:
-                loot_message += f" und '{item.name}'" if item_added else f" (aber '{item.name}' passte nicht ins Inventar!)"
+            if received_item:
+                if loot_status == "added":
+                    loot_message += f" und '{received_item.name}'"
+                elif loot_status == "inventory_full":
+                    loot_message += f" (aber '{received_item.name}' passte nicht ins Inventar!)"
+                elif loot_status == "auto_sold":
+                    loot_message += f" und '{received_item.name}' (automatisch verkauft für {format_currency(received_item.value)})"
+
             self.set_loot_text(loot_message)
+
             if level_up_info:
                 self.pause_quest_loop()
                 level_up_summary = f"Level Up! Du bist jetzt Level {self.player.level}!\n\nAttribut-Boni:\n" + "\n".join(level_up_info)
@@ -768,16 +777,41 @@ class RpgGui(ttk.Frame):
             return
 
         boss_data = BOSS_TIERS[current_tier]
-        player_ilvl = self.player.get_item_level()
+        # Use BASE item level for scaling the boss to ignore blacksmith upgrades
+        base_player_ilvl = self.player.get_base_item_level()
+        actual_player_ilvl = self.player.get_item_level() # For display and passing to the arena window
+
+        # Create a temporary boss instance to get scaled stats
+        temp_boss = Boss(
+            name=boss_data["name"],
+            hp=boss_data["hp"],
+            damage_range=boss_data["damage"],
+            image_path=boss_data["image_path"],
+            item_level=base_player_ilvl # Scale boss based on non-upgraded gear
+        )
+
+        # Get player combat stats for comparison
+        player_stats = self.player.get_total_stats()
+        main_stat_val = player_stats.get(self.player.main_stat, 0)
+        min_damage = main_stat_val // 2
+        max_damage = main_stat_val
 
         title = "Warnung"
-        message = f"Du bist dabei {boss_data['name']} (Stufe {player_ilvl}) herauszufordern.\n\n" \
-                  "Der Kampf kann nicht abgebrochen werden und die Gefahr des Todes ist sehr hoch.\n\n" \
-                  "Möchtest du fortfahren?"
+        message = (
+            f"Du bist dabei, {temp_boss.name} (Stufe {actual_player_ilvl}) herauszufordern.\n\n"
+            "--- Werte des Bosses ---\n"
+            f"Lebenspunkte: {temp_boss.max_hp}\n"
+            f"Schaden: {temp_boss.damage_range[0]} - {temp_boss.damage_range[1]}\n\n"
+            "--- Deine Werte ---\n"
+            f"Lebenspunkte: {self.player.current_lp} / {self.player.max_lp}\n"
+            f"Schaden: {min_damage} - {max_damage}\n\n"
+            "Der Kampf kann nicht abgebrochen werden und die Gefahr des Todes ist sehr hoch.\n\n"
+            "Möchtest du fortfahren?"
+        )
 
         if messagebox.askyesno(title, message, parent=self):
             self.boss_arena_button.config(state=tk.DISABLED)
-            BossArenaWindow(self, self.player, boss_data, player_ilvl, on_close_callback=self.on_boss_arena_close)
+            BossArenaWindow(self, self.player, boss_data, base_player_ilvl, on_close_callback=self.on_boss_arena_close)
         else:
             self.resume_quest_loop()
 
