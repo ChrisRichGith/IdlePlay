@@ -106,6 +106,12 @@ class RpgGui(ttk.Frame):
         self.create_widgets()
         self.update_display()
 
+        # Cheat code setup
+        self.cheat_buffer = ""
+        self.cheat_code = "ordilogicus"
+        # Bind to the top-level window to capture all key events
+        self.master.bind("<Key>", self._handle_keypress)
+
     def _setup_string_vars(self):
         """Creates tkinter StringVars to link data to labels."""
         self.char_name_var = tk.StringVar()
@@ -596,7 +602,7 @@ class RpgGui(ttk.Frame):
             # Interpolate font size
             new_font_size = int(initial_font_size * (1 - progress))
             if new_font_size > 1:
-                anim_label.config(font=("", new_font_size))
+                anim_canvas.itemconfig(text_id, font=("", new_font_size))
 
             if progress < 1.0:
                 self.after(20, animation_step)
@@ -834,6 +840,27 @@ class RpgGui(ttk.Frame):
 
         # Show the custom game over window
         GameOverWindow(self, self.player, on_close_callback=self.callbacks['game_over'])
+
+    def _handle_keypress(self, event):
+        """Handles key presses to check for cheat codes."""
+        self.cheat_buffer += event.char
+        # Keep the buffer trimmed to the length of the cheat code
+        if len(self.cheat_buffer) > len(self.cheat_code):
+            self.cheat_buffer = self.cheat_buffer[-len(self.cheat_code):]
+
+        if self.cheat_buffer == self.cheat_code:
+            # Toggle immortality
+            self.player.is_immortal = not self.player.is_immortal
+
+            if self.player.is_immortal:
+                # If cheat is now active, also set the permanent flag
+                self.player.cheat_activated = True
+                self.add_to_log("CHEAT AKTIVIERT: Unsterblichkeit!")
+            else:
+                self.add_to_log("CHEAT DEAKTIVIERT: Sterblichkeit wiederhergestellt.")
+
+            self.cheat_buffer = "" # Reset buffer after activation
+
 
 class Tooltip:
     """

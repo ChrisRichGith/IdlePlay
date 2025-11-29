@@ -81,8 +81,12 @@ class Quest:
         # --- 4. Handle quest completion ---
         if self.is_complete():
             damage = random.randint(5, 15)
-            character.current_lp = max(0, character.current_lp - damage)
-            event_message = f"Quest abgeschlossen! Du hast {damage} Schaden erlitten."
+            # Use the take_damage method to respect immortality
+            character.take_damage(damage)
+            if not character.is_immortal:
+                event_message = f"Quest abgeschlossen! Du hast {damage} Schaden erlitten."
+            else:
+                event_message = "Quest abgeschlossen! Dank deiner Unsterblichkeit hast du keinen Schaden erlitten."
 
         # Generate a class-specific action message, but less frequently
         if self.phase == "Aktion" and random.random() < 0.2: # 20% chance per tick
