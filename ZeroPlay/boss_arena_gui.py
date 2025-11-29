@@ -336,6 +336,7 @@ class BossArenaWindow(tk.Toplevel):
         if win:
             self.player_won = True
             self.player.boss_tier += 1  # Progress to the next boss tier
+            self.player.bosses_defeated += 1 # Increment defeated boss counter
             self.add_to_log(f"Du hast {self.boss.name} besiegt!")
 
             # Generate rewards
