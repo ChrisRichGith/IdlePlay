@@ -141,9 +141,11 @@ class Character:
         return True, f"{item.name} benutzt."
 
     def take_damage(self, damage):
-        """Reduces the character's HP by a given amount."""
-        if self.is_immortal:
-            return  # Don't take any damage if immortal
+        """Reduces the character's HP by a given amount, unless in god mode."""
+        # Check for god_mode attribute and if it's True
+        if hasattr(self, 'god_mode') and self.god_mode:
+            return # Don't take any damage
+
         self.current_lp -= damage
         if self.current_lp < 0:
             self.current_lp = 0

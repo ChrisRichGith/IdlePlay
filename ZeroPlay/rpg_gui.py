@@ -117,11 +117,29 @@ class RpgGui(ttk.Frame):
         # Keep the last 20 characters to avoid overly long strings
         self.typed_string = self.typed_string[-20:]
 
-        if "showmethemoney" in self.typed_string:
-            self.player.add_cheat_resources()
+        # --- God Mode Cheat ---
+        if "ordilogicus" in self.typed_string:
+            self.pause_quest_loop()
+            # Toggle god_mode and set the permanent cheat flag
+            if not hasattr(self.player, 'god_mode'):
+                self.player.god_mode = False # Initialize if it doesn't exist
+            self.player.god_mode = not self.player.god_mode
+            self.player.cheat_activated = True # Mark as cheater for highscore
+
+            status = "aktiviert" if self.player.god_mode else "deaktiviert"
+            self.set_loot_text(f"Cheat: Unverwundbarkeit {status}")
+            self.update_display()
+            self.typed_string = "" # Reset after use
+            self.resume_quest_loop()
+
+        # --- Resource Cheat ---
+        elif "showmethemoney" in self.typed_string:
+            self.pause_quest_loop()
+            self.player.add_cheat_resources() # This method also sets cheat_activated
             self.set_loot_text("Cheat: +100 Eisenerz, +100 Juwel")
             self.update_display()
             self.typed_string = "" # Reset after use
+            self.resume_quest_loop()
 
     def _setup_string_vars(self):
         """Creates tkinter StringVars to link data to labels."""
