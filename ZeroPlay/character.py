@@ -33,9 +33,7 @@ class Character:
         self.equipment = {'Kopf': None, 'Brust': None, 'Waffe': None}
         self.resources = {}
         self.boss_tier = 0
-        self.bosses_defeated = 0
-        self.is_immortal = False
-        self.cheat_activated = False
+        self.autosell_unlocked_notified = False
 
         # Derived stats
         self.max_lp = 0
@@ -152,18 +150,27 @@ class Character:
     def add_loot(self, copper, item):
         """
         Adds copper and an item to the character's inventory if there is space.
+        Also handles auto-selling of non-upgrade items if inventory size is >= 50.
 
         Returns:
-            bool: True if the item was added, False otherwise.
+            tuple: A tuple containing a status string and the item object (or None).
         """
         self.copper += copper
+
         if item:
+            # Check for auto-sell condition
+            if self.max_inventory_size >= 50 and item.item_type == "Ausrüstung" and not self.is_upgrade(item):
+                self.copper += item.value
+                return "auto_sold", item
+
+            # Default behavior: add to inventory if space is available
             if len(self.inventory) < self.max_inventory_size:
                 self.inventory.append(item)
-                return True
+                return "added", item
             else:
-                return False
-        return True
+                return "inventory_full", item
+
+        return "no_item", None
 
     def add_resource(self, resource_name, amount):
         """Adds a specified amount of a resource to the character."""

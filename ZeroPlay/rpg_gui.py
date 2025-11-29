@@ -650,12 +650,20 @@ class RpgGui(ttk.Frame):
                 messagebox.showwarning("Niedrige Lebenspunkte!", "Deine Lebenspunkte sind kritisch niedrig! Auto-Quest pausiert. Heile dich!")
         if self.current_quest.is_complete():
             gold, xp, item = self.current_quest.generate_reward(self.player)
-            item_added = self.player.add_loot(gold, item)
+            loot_status, received_item = self.player.add_loot(gold, item)
             level_up_info = self.player.add_xp(xp)
+
             loot_message = f"Loot: {format_currency(gold)}, {xp} XP"
-            if item:
-                loot_message += f" und '{item.name}'" if item_added else f" (aber '{item.name}' passte nicht ins Inventar!)"
+            if received_item:
+                if loot_status == "added":
+                    loot_message += f" und '{received_item.name}'"
+                elif loot_status == "inventory_full":
+                    loot_message += f" (aber '{received_item.name}' passte nicht ins Inventar!)"
+                elif loot_status == "auto_sold":
+                    loot_message += f" und '{received_item.name}' (automatisch verkauft für {format_currency(received_item.value)})"
+
             self.set_loot_text(loot_message)
+
             if level_up_info:
                 self.pause_quest_loop()
                 level_up_summary = f"Level Up! Du bist jetzt Level {self.player.level}!\n\nAttribut-Boni:\n" + "\n".join(level_up_info)
