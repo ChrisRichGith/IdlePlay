@@ -33,6 +33,7 @@ class Character:
         self.equipment = {'Kopf': None, 'Brust': None, 'Waffe': None}
         self.resources = {}
         self.boss_tier = 0
+        self.autosell_unlocked_notified = False
 
         # Derived stats
         self.max_lp = 0
@@ -147,18 +148,27 @@ class Character:
     def add_loot(self, copper, item):
         """
         Adds copper and an item to the character's inventory if there is space.
+        Also handles auto-selling of non-upgrade items if inventory size is >= 50.
 
         Returns:
-            bool: True if the item was added, False otherwise.
+            tuple: A tuple containing a status string and the item object (or None).
         """
         self.copper += copper
+
         if item:
+            # Check for auto-sell condition
+            if self.max_inventory_size >= 50 and item.item_type == "Ausrüstung" and not self.is_upgrade(item):
+                self.copper += item.value
+                return "auto_sold", item
+
+            # Default behavior: add to inventory if space is available
             if len(self.inventory) < self.max_inventory_size:
                 self.inventory.append(item)
-                return True
+                return "added", item
             else:
-                return False
-        return True
+                return "inventory_full", item
+
+        return "no_item", None
 
     def add_resource(self, resource_name, amount):
         """Adds a specified amount of a resource to the character."""
@@ -259,6 +269,22 @@ class Character:
         for item in self.equipment.values():
             if item:
                 total_score += item.get_item_score()
+                equipped_items += 1
+
+        if equipped_items == 0:
+            return 0
+        return total_score // equipped_items
+
+    def get_base_item_level(self):
+        """
+        Calculates the average item score of equipped gear based on BASE stats,
+        ignoring blacksmith upgrades.
+        """
+        total_score = 0
+        equipped_items = 0
+        for item in self.equipment.values():
+            if item:
+                total_score += item.get_base_item_score()
                 equipped_items += 1
 
         if equipped_items == 0:
