@@ -567,32 +567,25 @@ class RpgGui(ttk.Frame):
             self._animate_resource_collection(symbol, start_coords_canvas)
 
     def _animate_resource_collection(self, symbol, start_coords_canvas):
-        """Animates the resource symbol flying on a top-level window using a Canvas for better transparency."""
-        anim_window = tk.Toplevel(self)
-        anim_window.overrideredirect(True)
-        try:
-            anim_window.attributes('-transparentcolor', 'black')
-        except tk.TclError:
-            pass
-
+        """Animates the resource symbol flying across the main window."""
         initial_font_size = 14
-        canvas_size = initial_font_size + 10
+        anim_label = ttk.Label(self.master, text=symbol, font=("", initial_font_size))
 
-        # Use a Canvas for cleaner transparency
-        anim_canvas = tk.Canvas(anim_window, width=canvas_size, height=canvas_size, bg='black', highlightthickness=0)
-        anim_canvas.pack()
-        text_id = anim_canvas.create_text(canvas_size/2, canvas_size/2, text=symbol, fill="white", font=("", initial_font_size))
+        # Calculate coordinates relative to the root window
+        root_x = self.master.winfo_rootx()
+        root_y = self.master.winfo_rooty()
 
         canvas_x_abs = self.minigame_canvas.winfo_rootx()
         canvas_y_abs = self.minigame_canvas.winfo_rooty()
-        start_x = canvas_x_abs + start_coords_canvas[0] - canvas_size/2
-        start_y = canvas_y_abs + start_coords_canvas[1] - canvas_size/2
+        start_x = (canvas_x_abs - root_x) + start_coords_canvas[0]
+        start_y = (canvas_y_abs - root_y) + start_coords_canvas[1]
 
-        end_x = self.resources_label.winfo_rootx() + self.resources_label.winfo_width() // 2
-        end_y = self.resources_label.winfo_rooty()
+        end_x = (self.resources_label.winfo_rootx() - root_x) + self.resources_label.winfo_width() // 2
+        end_y = (self.resources_label.winfo_rooty() - root_y)
 
-        anim_window.geometry(f"+{int(start_x)}+{int(start_y)}")
-        anim_window.lift()
+        # Start animation
+        anim_label.place(x=start_x, y=start_y, anchor="center")
+        anim_label.lift()
 
         start_time = time.time()
         duration = 0.8
@@ -601,10 +594,12 @@ class RpgGui(ttk.Frame):
             elapsed = time.time() - start_time
             progress = min(elapsed / duration, 1.0)
 
+            # Interpolate position
             new_x = start_x + (end_x - start_x) * progress
             new_y = start_y + (end_y - start_y) * progress
-            anim_window.geometry(f"+{int(new_x)}+{int(new_y)}")
+            anim_label.place(x=new_x, y=new_y, anchor="center")
 
+            # Interpolate font size
             new_font_size = int(initial_font_size * (1 - progress))
             if new_font_size > 1:
                 anim_canvas.itemconfig(text_id, font=("", new_font_size))
@@ -612,7 +607,7 @@ class RpgGui(ttk.Frame):
             if progress < 1.0:
                 self.after(20, animation_step)
             else:
-                anim_window.destroy()
+                anim_label.destroy()
                 self.update_display()
 
         animation_step()
