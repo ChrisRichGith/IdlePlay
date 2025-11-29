@@ -15,7 +15,7 @@ from trader import Trader
 from trader_gui import TraderWindow
 from blacksmith_gui import BlacksmithWindow
 from boss_arena_gui import BossArenaWindow
-from save_load_system import save_game
+from save_load_system import save_game, save_highscore
 from utils import format_currency, center_window
 from game_over_gui import GameOverWindow
 from game_data import BOSS_TIERS
@@ -804,6 +804,10 @@ class RpgGui(ttk.Frame):
 
     def handle_game_over(self):
         self.game_over = True
+
+        # Save the character's score before showing the game over screen
+        save_highscore(self.player)
+
         try:
             img = Image.open("assets/grabstein.png")
             img.thumbnail((220, 280))
