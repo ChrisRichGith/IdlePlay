@@ -835,6 +835,27 @@ class RpgGui(ttk.Frame):
         # Show the custom game over window
         GameOverWindow(self, self.player, on_close_callback=self.callbacks['game_over'])
 
+    def _handle_keypress(self, event):
+        """Handles key presses to check for cheat codes."""
+        self.cheat_buffer += event.char
+        # Keep the buffer trimmed to the length of the cheat code
+        if len(self.cheat_buffer) > len(self.cheat_code):
+            self.cheat_buffer = self.cheat_buffer[-len(self.cheat_code):]
+
+        if self.cheat_buffer == self.cheat_code:
+            # Toggle immortality
+            self.player.is_immortal = not self.player.is_immortal
+
+            if self.player.is_immortal:
+                # If cheat is now active, also set the permanent flag
+                self.player.cheat_activated = True
+                self.add_to_log("CHEAT AKTIVIERT: Unsterblichkeit!")
+            else:
+                self.add_to_log("CHEAT DEAKTIVIERT: Sterblichkeit wiederhergestellt.")
+
+            self.cheat_buffer = "" # Reset buffer after activation
+
+
 class Tooltip:
     """
     Create a tooltip for a given widget.
