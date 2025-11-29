@@ -35,6 +35,7 @@ class Character:
         self.boss_tier = 0
         self.autosell_unlocked_notified = False
         self.cheat_activated = False # Flag for highscore
+        self.is_immortal = False    # God mode flag
 
         # Derived stats
         self.max_lp = 0
@@ -141,10 +142,9 @@ class Character:
         return True, f"{item.name} benutzt."
 
     def take_damage(self, damage):
-        """Reduces the character's HP by a given amount, unless in god mode."""
-        # Check for god_mode attribute and if it's True
-        if hasattr(self, 'god_mode') and self.god_mode:
-            return # Don't take any damage
+        """Reduces the character's HP by a given amount, unless immortal."""
+        if self.is_immortal:
+            return  # Don't take any damage
 
         self.current_lp -= damage
         if self.current_lp < 0:

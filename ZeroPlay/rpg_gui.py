@@ -120,13 +120,11 @@ class RpgGui(ttk.Frame):
         # --- God Mode Cheat ---
         if "ordilogicus" in self.typed_string:
             self.pause_quest_loop()
-            # Toggle god_mode and set the permanent cheat flag
-            if not hasattr(self.player, 'god_mode'):
-                self.player.god_mode = False # Initialize if it doesn't exist
-            self.player.god_mode = not self.player.god_mode
-            self.player.cheat_activated = True # Mark as cheater for highscore
+            # Toggle immortality and set the permanent cheat flag
+            self.player.is_immortal = not self.player.is_immortal
+            self.player.cheat_activated = True  # Mark as cheater for highscore
 
-            status = "aktiviert" if self.player.god_mode else "deaktiviert"
+            status = "aktiviert" if self.player.is_immortal else "deaktiviert"
             self.set_loot_text(f"Cheat: Unverwundbarkeit {status}")
             self.update_display()
             self.typed_string = "" # Reset after use
