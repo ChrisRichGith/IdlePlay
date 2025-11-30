@@ -33,6 +33,10 @@ class Character:
         self.equipment = {'Kopf': None, 'Brust': None, 'Waffe': None}
         self.resources = {}
         self.boss_tier = 0
+        self.autosell_unlocked_notified = False
+        self.cheat_activated = False # Flag for highscore
+        self.is_immortal = False    # God mode flag
+        self.bosses_defeated = 0
 
         # Derived stats
         self.max_lp = 0
@@ -139,7 +143,10 @@ class Character:
         return True, f"{item.name} benutzt."
 
     def take_damage(self, damage):
-        """Reduces the character's HP by a given amount."""
+        """Reduces the character's HP by a given amount, unless immortal."""
+        if self.is_immortal:
+            return  # Don't take any damage
+
         self.current_lp -= damage
         if self.current_lp < 0:
             self.current_lp = 0
@@ -147,18 +154,27 @@ class Character:
     def add_loot(self, copper, item):
         """
         Adds copper and an item to the character's inventory if there is space.
+        Also handles auto-selling of non-upgrade items if inventory size is >= 50.
 
         Returns:
-            bool: True if the item was added, False otherwise.
+            tuple: A tuple containing a status string and the item object (or None).
         """
         self.copper += copper
+
         if item:
+            # Check for auto-sell condition
+            if self.max_inventory_size >= 50 and item.item_type == "Ausrüstung" and not self.is_upgrade(item):
+                self.copper += item.value
+                return "auto_sold", item
+
+            # Default behavior: add to inventory if space is available
             if len(self.inventory) < self.max_inventory_size:
                 self.inventory.append(item)
-                return True
+                return "added", item
             else:
-                return False
-        return True
+                return "inventory_full", item
+
+        return "no_item", None
 
     def add_resource(self, resource_name, amount):
         """Adds a specified amount of a resource to the character."""
@@ -166,6 +182,12 @@ class Character:
             self.resources[resource_name] += amount
         else:
             self.resources[resource_name] = amount
+
+    def add_cheat_resources(self):
+        """Adds 100 of each resource for testing and flags the character."""
+        self.cheat_activated = True
+        self.add_resource("Eisenerz", 100)
+        self.add_resource("Juwel", 100)
 
     def remove_resources(self, cost):
         """
@@ -204,9 +226,10 @@ class Character:
             # Any item is an upgrade if the slot is empty, provided it has a positive score
             return item_from_inventory.get_weighted_score(main_stat) > 0
 
-        # Compare the weighted scores
-        new_item_score = item_from_inventory.get_weighted_score(main_stat)
-        equipped_item_score = equipped_item.get_weighted_score(main_stat)
+        # For auto-selling, compare the new item's base score to the equipped item's base score.
+        # This prevents selling items that *could* be better if upgraded.
+        new_item_score = item_from_inventory.get_base_weighted_score(main_stat)
+        equipped_item_score = equipped_item.get_base_weighted_score(main_stat)
 
         return new_item_score > equipped_item_score
 
@@ -259,6 +282,22 @@ class Character:
         for item in self.equipment.values():
             if item:
                 total_score += item.get_item_score()
+                equipped_items += 1
+
+        if equipped_items == 0:
+            return 0
+        return total_score // equipped_items
+
+    def get_base_item_level(self):
+        """
+        Calculates the average item score of equipped gear based on BASE stats,
+        ignoring blacksmith upgrades.
+        """
+        total_score = 0
+        equipped_items = 0
+        for item in self.equipment.values():
+            if item:
+                total_score += item.get_base_item_score()
                 equipped_items += 1
 
         if equipped_items == 0:
