@@ -8,6 +8,7 @@ import random
 import time
 from PIL import Image, ImageTk
 
+from boss import Boss
 from character import Character
 from quest import Quest
 from trader import Trader
@@ -15,6 +16,7 @@ from trader_gui import TraderWindow
 from blacksmith_gui import BlacksmithWindow
 from boss_arena_gui import BossArenaWindow
 from save_load_system import save_game
+from highscore_manager import save_highscore
 from utils import format_currency, center_window
 from game_over_gui import GameOverWindow
 from game_data import BOSS_TIERS
@@ -101,9 +103,82 @@ class RpgGui(ttk.Frame):
         self.next_orb_spawn_delay = random.uniform(2, 5)
         self.minigame_running = False # Initial state for the minigame
 
+        # Cheat code tracking
+        self.typed_string = ""
+        self.master.bind("<Key>", self.handle_keypress)
+
         self._setup_string_vars()
+        # --- UI Redesign: Background Canvas ---
+        try:
+            self.bg_stone_pil = Image.open("assets/stone_background.png")
+            self.bg_leather_pil = Image.open("assets/leather_background.png")
+        except FileNotFoundError:
+            self.bg_stone_pil = None
+            self.bg_leather_pil = None
+        self.background_canvas = tk.Canvas(self)
+        self.background_canvas.place(x=0, y=0, relwidth=1, relheight=1)
+        self.bind("<Configure>", self._draw_tiled_background)
+        # --- End UI Redesign ---
+
         self.create_widgets()
         self.update_display()
+
+    def _draw_tiled_background(self, event):
+        """Draws the tiled stone background onto the canvas."""
+        if not self.bg_stone_pil:
+            self.background_canvas.config(bg="#3b3b3b")  # Dark grey fallback
+            return
+
+        width = self.winfo_width()
+        height = self.winfo_height()
+
+        # If window is not yet drawn, width/height can be 1, do nothing
+        if width <= 1 or height <= 1:
+            return
+
+        # Create a new image to hold the tiled background
+        bg_image = Image.new('RGB', (width, height))
+        tile_w, tile_h = self.bg_stone_pil.size
+
+        # Tile the image
+        for x in range(0, width, tile_w):
+            for y in range(0, height, tile_h):
+                bg_image.paste(self.bg_stone_pil, (x, y))
+
+        # Convert to PhotoImage, keep a reference, and draw on canvas
+        self.bg_stone_tk = ImageTk.PhotoImage(bg_image)
+        self.background_canvas.create_image(0, 0, image=self.bg_stone_tk, anchor='nw')
+
+        # Keep the canvas at the bottom of the stacking order
+        self.background_canvas.lower()
+
+    def handle_keypress(self, event):
+        """Handles key presses for cheat codes."""
+        self.typed_string += event.char.lower()
+        # Keep the last 20 characters to avoid overly long strings
+        self.typed_string = self.typed_string[-20:]
+
+        # --- God Mode Cheat ---
+        if "ordilogicus" in self.typed_string:
+            self.pause_quest_loop()
+            # Toggle immortality and set the permanent cheat flag
+            self.player.is_immortal = not self.player.is_immortal
+            self.player.cheat_activated = True  # Mark as cheater for highscore
+
+            status = "aktiviert" if self.player.is_immortal else "deaktiviert"
+            self.set_loot_text(f"Cheat: Unverwundbarkeit {status}")
+            self.update_display()
+            self.typed_string = "" # Reset after use
+            self.resume_quest_loop()
+
+        # --- Resource Cheat ---
+        elif "showmethemoney" in self.typed_string:
+            self.pause_quest_loop()
+            self.player.add_cheat_resources() # This method also sets cheat_activated
+            self.set_loot_text("Cheat: +100 Eisenerz, +100 Juwel")
+            self.update_display()
+            self.typed_string = "" # Reset after use
+            self.resume_quest_loop()
 
     def _setup_string_vars(self):
         """Creates tkinter StringVars to link data to labels."""
@@ -128,6 +203,37 @@ class RpgGui(ttk.Frame):
         self.rowconfigure(0, weight=1) # Top area
         self.rowconfigure(1, weight=0) # Bottom area for the log
 
+        # --- UI Redesign: Configure styles for UI elements ---
+        style = ttk.Style()
+        # Set a base background color that complements the stone, for areas the leather doesn't cover.
+        style.configure('TFrame', background='#4a4a4a')
+
+        # Style for widgets on the leather background
+        leather_bg_color = '#6F4E37' # Coffee brown, as a fallback and for matching
+        leather_fg_color = '#F5DEB3' # Wheat color for text
+
+        style.configure('Leather.TLabel', background=leather_bg_color, foreground=leather_fg_color, font=('Verdana', 9))
+        style.configure('Leather.TLabelFrame', background=leather_bg_color)
+        style.configure('Leather.TLabelFrame.Label', background=leather_bg_color, foreground=leather_fg_color, font=('Verdana', 10, 'bold'))
+
+        # Style for Buttons on the leather background
+        style.configure('Leather.TButton', background='#5D4037', foreground=leather_fg_color, font=('Verdana', 9, 'bold'), borderwidth=1)
+        style.map('Leather.TButton',
+            background=[('active', '#795548'), ('disabled', '#4E342E')],
+            foreground=[('disabled', '#A1887F')])
+
+        # Style for the Notebook (Tabs)
+        style.configure('Leather.TNotebook', background=leather_bg_color, borderwidth=0)
+        style.configure('Leather.TNotebook.Tab',
+            background='#5D4037', # Darker brown for inactive tab
+            foreground=leather_fg_color,
+            padding=[8, 4],
+            font=('Verdana', 9, 'bold')
+        )
+        style.map('Leather.TNotebook.Tab',
+            background=[('selected', leather_bg_color)], # Active tab matches panel bg
+            expand=[('selected', [1, 1, 1, 0])])
+
         # Create main frames for each section
         char_frame_container = ttk.Frame(self)
         char_frame_container.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
@@ -149,10 +255,10 @@ class RpgGui(ttk.Frame):
         self._create_actions_frame(actions_frame)
 
         # Create and populate the notebook for equipment and inventory
-        notebook = ttk.Notebook(inventory_frame)
+        notebook = ttk.Notebook(inventory_frame, style='Leather.TNotebook')
         notebook.grid(row=0, column=0, sticky="nsew")
-        equipment_tab = ttk.Frame(notebook)
-        inventory_tab = ttk.Frame(notebook)
+        equipment_tab = ttk.Frame(notebook, style='Leather.TFrame')
+        inventory_tab = ttk.Frame(notebook, style='Leather.TFrame')
         notebook.add(equipment_tab, text='Ausrüstung')
         notebook.add(inventory_tab, text='Inventar')
 
@@ -161,27 +267,55 @@ class RpgGui(ttk.Frame):
 
         self._create_log_frame(log_frame)
 
+    def _apply_leather_background(self, widget):
+        """Applies the tiled leather background to a given widget."""
+        if not self.bg_leather_pil:
+            widget.configure(bg="#6F4E37") # Coffee brown fallback
+            return
+
+        canvas = tk.Canvas(widget)
+        canvas.place(x=0, y=0, relwidth=1, relheight=1)
+
+        def tile_background(event):
+            width = event.width
+            height = event.height
+            if width <= 1 or height <= 1: return
+
+            bg_image = Image.new('RGB', (width, height))
+            tile_w, tile_h = self.bg_leather_pil.size
+            for x in range(0, width, tile_w):
+                for y in range(0, height, tile_h):
+                    bg_image.paste(self.bg_leather_pil, (x, y))
+
+            # Store reference on the canvas itself to avoid garbage collection
+            canvas.bg_photo = ImageTk.PhotoImage(bg_image)
+            canvas.create_image(0, 0, image=canvas.bg_photo, anchor='nw')
+            canvas.lower()
+
+        widget.bind("<Configure>", tile_background)
+
     def _create_character_frame(self, parent):
-        char_frame = ttk.LabelFrame(parent, text="Charakterstatus", padding="10")
+        char_frame = ttk.LabelFrame(parent, text="Charakterstatus", padding="10", style='Leather.TLabelFrame')
         char_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 10), anchor='n')
+        self._apply_leather_background(char_frame) # Apply the leather background here
         char_frame.columnconfigure(2, weight=1) # Allow portrait column to expand
 
         # --- Left side: Stats ---
         labels = {"Name:": self.char_name_var, "Level:": self.char_level_var, "Item Level:": self.item_level_var, "Gold:": self.char_gold_var}
         for i, (text, var) in enumerate(labels.items()):
-            ttk.Label(char_frame, text=text).grid(row=i, column=0, sticky="w")
-            ttk.Label(char_frame, textvariable=var).grid(row=i, column=1, sticky="w")
+            ttk.Label(char_frame, text=text, style='Leather.TLabel').grid(row=i, column=0, sticky="w")
+            ttk.Label(char_frame, textvariable=var, style='Leather.TLabel').grid(row=i, column=1, sticky="w")
 
-        attr_frame = ttk.LabelFrame(char_frame, text="Attribute", padding="5")
+        attr_frame = ttk.LabelFrame(char_frame, text="Attribute", padding="5", style='Leather.TLabelFrame')
         attr_frame.grid(row=3, column=0, columnspan=2, sticky="ew", pady=(10, 0))
         for i, (stat, var) in enumerate(self.stats_vars.items()):
-            ttk.Label(attr_frame, text=f"{stat}:").grid(row=i, column=0, sticky="w")
-            ttk.Label(attr_frame, textvariable=var).grid(row=i, column=1, sticky="w", padx=5)
+            ttk.Label(attr_frame, text=f"{stat}:", style='Leather.TLabel').grid(row=i, column=0, sticky="w")
+            ttk.Label(attr_frame, textvariable=var, style='Leather.TLabel').grid(row=i, column=1, sticky="w", padx=5)
 
         # Resources Display
-        resources_frame = ttk.LabelFrame(char_frame, text="Ressourcen", padding="5")
+        resources_frame = ttk.LabelFrame(char_frame, text="Ressourcen", padding="5", style='Leather.TLabelFrame')
         resources_frame.grid(row=4, column=0, columnspan=2, sticky="ew", pady=(10, 0))
-        self.resources_label = ttk.Label(resources_frame, text="Noch keine Ressourcen gesammelt.")
+        self.resources_label = ttk.Label(resources_frame, text="Noch keine Ressourcen gesammelt.", style='Leather.TLabel')
         self.resources_label.pack(fill=tk.X, expand=True)
 
 
@@ -194,14 +328,14 @@ class RpgGui(ttk.Frame):
         ]
 
         for i, (text, var_name) in enumerate(progress_bars_data):
-            frame = ttk.LabelFrame(char_frame, text=text, padding=5)
+            frame = ttk.LabelFrame(char_frame, text=text, padding=5, style='Leather.TLabelFrame')
             # We will manage the grid position later
             setattr(self, f"{var_name}_frame", frame)
 
             bar = ttk.Progressbar(frame, orient='horizontal', mode='determinate')
             bar.pack(fill=tk.X, expand=True)
             label_var = getattr(self, f"{var_name}_label_var")
-            ttk.Label(frame, textvariable=label_var, anchor="center").pack()
+            ttk.Label(frame, textvariable=label_var, anchor="center", style='Leather.TLabel').pack()
             setattr(self, f"{var_name}_bar", bar)
 
         # --- Right side: Portrait ---
@@ -223,27 +357,30 @@ class RpgGui(ttk.Frame):
             self.portrait_label.config(text=f"Fehler beim\nLaden des Bildes:\n{e}")
 
     def _create_actions_frame(self, parent):
-        actions_frame = ttk.LabelFrame(parent, text="Aktionen", padding="10")
+        actions_frame = ttk.LabelFrame(parent, text="Aktionen", padding="10", style='Leather.TLabelFrame')
         actions_frame.pack(fill=tk.Y, expand=False, anchor='n')
+        self._apply_leather_background(actions_frame)
 
-        self.quest_button = ttk.Button(actions_frame, text="Neue Quest beginnen", command=self.start_quest)
+        self.quest_button = ttk.Button(actions_frame, text="Neue Quest beginnen", command=self.start_quest, style='Leather.TButton')
         self.quest_button.pack(fill=tk.X, pady=5)
-        self.auto_quest_button = ttk.Button(actions_frame, text="Auto-Quest starten", command=self.toggle_auto_quest)
+        self.auto_quest_button = ttk.Button(actions_frame, text="Auto-Quest starten", command=self.toggle_auto_quest, style='Leather.TButton')
         self.auto_quest_button.pack(fill=tk.X, pady=5)
-        self.trader_button = ttk.Button(actions_frame, text="Händler besuchen", command=self.open_trader_window)
+        self.trader_button = ttk.Button(actions_frame, text="Händler besuchen", command=self.open_trader_window, style='Leather.TButton')
         self.trader_button.pack(fill=tk.X, pady=5)
-        self.blacksmith_button = ttk.Button(actions_frame, text="Schmied besuchen", command=self.open_blacksmith_window)
+        self.blacksmith_button = ttk.Button(actions_frame, text="Schmied besuchen", command=self.open_blacksmith_window, style='Leather.TButton')
         self.blacksmith_button.pack(fill=tk.X, pady=5)
-        self.boss_arena_button = ttk.Button(actions_frame, text="Boss Arena", command=self.open_boss_arena_window)
+        self.boss_arena_button = ttk.Button(actions_frame, text="Boss Arena", command=self.open_boss_arena_window, style='Leather.TButton')
         self.boss_arena_button.pack(fill=tk.X, pady=5)
-        self.equip_button = ttk.Button(actions_frame, text="Gegenstand ausrüsten", command=self.equip_item)
+        self.equip_button = ttk.Button(actions_frame, text="Gegenstand ausrüsten", command=self.equip_item, style='Leather.TButton')
         self.equip_button.pack(fill=tk.X, pady=5)
-        self.use_button = ttk.Button(actions_frame, text="Gegenstand benutzen", command=self.use_item)
+        self.use_button = ttk.Button(actions_frame, text="Gegenstand benutzen", command=self.use_item, style='Leather.TButton')
         self.use_button.pack(fill=tk.X, pady=5)
         self.progress_bar = ttk.Progressbar(actions_frame, orient='horizontal', mode='determinate', length=120)
         self.progress_bar.pack(fill=tk.X, pady=(10, 5))
 
-        self.loot_status_text = tk.Text(actions_frame, height=2, wrap=tk.WORD, bg="lightgrey", relief="flat", fg="gray")
+        leather_bg_color = '#6F4E37' # Coffee brown
+        leather_fg_color = '#F5DEB3' # Wheat color
+        self.loot_status_text = tk.Text(actions_frame, height=2, wrap=tk.WORD, bg=leather_bg_color, relief="flat", fg=leather_fg_color, font=('Verdana', 8))
         self.loot_status_text.pack(fill=tk.X, pady=5)
         self.loot_status_text.config(state=tk.DISABLED)
 
@@ -255,10 +392,10 @@ class RpgGui(ttk.Frame):
 
 
         # Minigame Canvas
-        minigame_frame = ttk.LabelFrame(actions_frame, text="Ressourcenjagd", padding="5")
+        minigame_frame = ttk.LabelFrame(actions_frame, text="Ressourcenjagd", padding="5", style='Leather.TLabelFrame')
         minigame_frame.pack(fill=tk.X, pady=(10, 0), expand=True)
 
-        self.minigame_toggle_button = ttk.Button(minigame_frame, text="Ressourcenjagd starten", command=self.toggle_minigame)
+        self.minigame_toggle_button = ttk.Button(minigame_frame, text="Ressourcenjagd starten", command=self.toggle_minigame, style='Leather.TButton')
         self.minigame_toggle_button.pack(fill=tk.X, pady=(0, 5))
 
         self.minigame_canvas = tk.Canvas(minigame_frame, width=240, height=300, relief="sunken", borderwidth=1)
@@ -276,13 +413,16 @@ class RpgGui(ttk.Frame):
 
     def _create_log_frame(self, parent):
         """Creates the quest log text widget."""
-        log_labelframe = ttk.LabelFrame(parent, text="Log", padding="10")
+        log_labelframe = ttk.LabelFrame(parent, text="Log", padding="10", style='Leather.TLabelFrame')
         log_labelframe.pack(fill=tk.X, expand=True)
+        self._apply_leather_background(log_labelframe)
 
         log_labelframe.rowconfigure(0, weight=1)
         log_labelframe.columnconfigure(0, weight=1)
 
-        self.quest_log = tk.Text(log_labelframe, height=10, wrap=tk.WORD, bg="#2B2B2B", fg="white", relief="flat")
+        leather_bg_color = '#6F4E37' # Coffee brown
+        leather_fg_color = '#F5DEB3' # Wheat color
+        self.quest_log = tk.Text(log_labelframe, height=10, wrap=tk.WORD, bg=leather_bg_color, fg=leather_fg_color, relief="flat", font=('Verdana', 9))
         self.quest_log.grid(row=0, column=0, sticky="nsew")
         scrollbar = ttk.Scrollbar(log_labelframe, orient=tk.VERTICAL, command=self.quest_log.yview)
         self.quest_log.config(yscrollcommand=scrollbar.set)
@@ -301,17 +441,19 @@ class RpgGui(ttk.Frame):
 
     def _create_equipment_frame(self, parent):
         parent.columnconfigure(1, weight=1)
-        equip_frame = ttk.LabelFrame(parent, text="Angelegte Ausrüstung", padding="10")
+        equip_frame = ttk.LabelFrame(parent, text="Angelegte Ausrüstung", padding="10", style='Leather.TLabelFrame')
         equip_frame.pack(fill=tk.X, padx=10, pady=10)
+        self._apply_leather_background(equip_frame)
         for i, (slot, var) in enumerate(self.equipment_vars.items()):
-            ttk.Label(equip_frame, text=f"{slot}:").grid(row=i, column=0, sticky="w")
-            ttk.Label(equip_frame, textvariable=var).grid(row=i, column=1, sticky="w", padx=5)
+            ttk.Label(equip_frame, text=f"{slot}:", style='Leather.TLabel').grid(row=i, column=0, sticky="w")
+            ttk.Label(equip_frame, textvariable=var, style='Leather.TLabel').grid(row=i, column=1, sticky="w", padx=5)
 
     def _create_inventory_frame(self, parent):
         parent.rowconfigure(0, weight=1)
         parent.columnconfigure(0, weight=1)
-        self.inv_frame = ttk.LabelFrame(parent, text="Rucksack", padding="10")
+        self.inv_frame = ttk.LabelFrame(parent, text="Rucksack", padding="10", style='Leather.TLabelFrame')
         self.inv_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        self._apply_leather_background(self.inv_frame)
         self.inv_frame.rowconfigure(0, weight=1)
         self.inv_frame.columnconfigure(0, weight=1)
         self.inventory_listbox = tk.Listbox(self.inv_frame, bg="#2B2B2B", fg="white", selectbackground="#0078D7")
@@ -544,76 +686,46 @@ class RpgGui(ttk.Frame):
                 self.next_orb_spawn_delay = random.uniform(2, 5)
 
     def on_orb_click(self, orb_id):
-        """Handles the click on a resource orb."""
+        """Handles the click on a resource orb with a zoom-pulse animation."""
         if orb_id in self.minigame_orbs:
-            # Immediately get all info and then remove the orb from the canvas and dict
-            # to prevent any race conditions or double-clicks.
             resource_data = self.minigame_orbs.pop(orb_id)
-            symbol = self.minigame_canvas.itemcget(orb_id, 'text')
-            start_coords_canvas = self.minigame_canvas.coords(orb_id)
-            self.minigame_canvas.delete(orb_id)
-
-            # Add the resource to the player's inventory
             self.player.add_resource(resource_data['resource'], 1)
 
-            # Start the top-level animation
-            self._animate_resource_collection(symbol, start_coords_canvas)
+            # --- New Zoom-Pulse Animation ---
+            start_time = time.time()
+            duration = 0.3  # 300ms animation
+            initial_font_size = 14
+            max_font_size = 24
 
-    def _animate_resource_collection(self, symbol, start_coords_canvas):
-        """Animates the resource symbol flying on a top-level window."""
-        # 1. Create a frameless Toplevel window for the animation
-        anim_window = tk.Toplevel(self)
-        anim_window.overrideredirect(True)
-        # Use a transparent color; this works on Windows and some Linux WMs.
-        # A solid color like 'black' is used for the label bg as a fallback.
-        try:
-            anim_window.attributes('-transparentcolor', 'black')
-        except tk.TclError:
-            pass  # This feature is not supported on all platforms.
+            def pulse_step():
+                elapsed = time.time() - start_time
+                progress = min(elapsed / duration, 1.0)
 
-        # 2. Create the label with the symbol inside the Toplevel
-        initial_font_size = 14
-        anim_label = ttk.Label(anim_window, text=symbol, font=("", initial_font_size),
-                               background='black', foreground='white')
-        anim_label.pack()
+                # Go from initial to max size in the first half, then back down
+                if progress < 0.5:
+                    size_progress = progress * 2
+                else:
+                    size_progress = (1 - progress) * 2
 
-        # 3. Calculate absolute start and end screen coordinates
-        canvas_x_abs = self.minigame_canvas.winfo_rootx()
-        canvas_y_abs = self.minigame_canvas.winfo_rooty()
-        start_x = canvas_x_abs + start_coords_canvas[0]
-        start_y = canvas_y_abs + start_coords_canvas[1]
+                current_size = int(initial_font_size + (max_font_size - initial_font_size) * size_progress)
 
-        end_x = self.resources_label.winfo_rootx() + self.resources_label.winfo_width() // 2
-        end_y = self.resources_label.winfo_rooty()
+                try:
+                    self.minigame_canvas.itemconfig(orb_id, font=("", current_size))
+                except tk.TclError:
+                    # Orb might have been deleted if another function cleared it, just stop.
+                    return
 
-        # 4. Position the window at the start and lift it to the top
-        anim_window.geometry(f"+{int(start_x)}+{int(start_y)}")
-        anim_window.lift()
+                if progress < 1.0:
+                    self.after(15, pulse_step)
+                else:
+                    # Animation finished, now delete the orb and update the UI
+                    try:
+                        self.minigame_canvas.delete(orb_id)
+                    except tk.TclError:
+                        pass # Ignore if already gone
+                    self.update_display()
 
-        start_time = time.time()
-        duration = 0.8  # Use the already adjusted duration
-
-        def animation_step():
-            elapsed = time.time() - start_time
-            progress = min(elapsed / duration, 1.0)
-
-            # Interpolate the window's position
-            new_x = start_x + (end_x - start_x) * progress
-            new_y = start_y + (end_y - start_y) * progress
-            anim_window.geometry(f"+{int(new_x)}+{int(new_y)}")
-
-            # Interpolate the font size for the zoom-out effect
-            new_font_size = int(initial_font_size * (1 - progress))
-            if new_font_size > 1:
-                anim_label.config(font=("", new_font_size))
-
-            if progress < 1.0:
-                self.after(20, animation_step)
-            else:
-                anim_window.destroy()
-                self.update_display()  # Update the counter at the very end
-
-        animation_step()
+            pulse_step()
 
 
     def advance_quest(self):
@@ -643,12 +755,20 @@ class RpgGui(ttk.Frame):
                 messagebox.showwarning("Niedrige Lebenspunkte!", "Deine Lebenspunkte sind kritisch niedrig! Auto-Quest pausiert. Heile dich!")
         if self.current_quest.is_complete():
             gold, xp, item = self.current_quest.generate_reward(self.player)
-            item_added = self.player.add_loot(gold, item)
+            loot_status, received_item = self.player.add_loot(gold, item)
             level_up_info = self.player.add_xp(xp)
+
             loot_message = f"Loot: {format_currency(gold)}, {xp} XP"
-            if item:
-                loot_message += f" und '{item.name}'" if item_added else f" (aber '{item.name}' passte nicht ins Inventar!)"
+            if received_item:
+                if loot_status == "added":
+                    loot_message += f" und '{received_item.name}'"
+                elif loot_status == "inventory_full":
+                    loot_message += f" (aber '{received_item.name}' passte nicht ins Inventar!)"
+                elif loot_status == "auto_sold":
+                    loot_message += f" und '{received_item.name}' (automatisch verkauft für {format_currency(received_item.value)})"
+
             self.set_loot_text(loot_message)
+
             if level_up_info:
                 self.pause_quest_loop()
                 level_up_summary = f"Level Up! Du bist jetzt Level {self.player.level}!\n\nAttribut-Boni:\n" + "\n".join(level_up_info)
@@ -768,16 +888,41 @@ class RpgGui(ttk.Frame):
             return
 
         boss_data = BOSS_TIERS[current_tier]
-        player_ilvl = self.player.get_item_level()
+        # Use BASE item level for scaling the boss to ignore blacksmith upgrades
+        base_player_ilvl = self.player.get_base_item_level()
+        actual_player_ilvl = self.player.get_item_level() # For display and passing to the arena window
+
+        # Create a temporary boss instance to get scaled stats
+        temp_boss = Boss(
+            name=boss_data["name"],
+            hp=boss_data["hp"],
+            damage_range=boss_data["damage"],
+            image_path=boss_data["image_path"],
+            item_level=base_player_ilvl # Scale boss based on non-upgraded gear
+        )
+
+        # Get player combat stats for comparison
+        player_stats = self.player.get_total_stats()
+        main_stat_val = player_stats.get(self.player.main_stat, 0)
+        min_damage = main_stat_val // 2
+        max_damage = main_stat_val
 
         title = "Warnung"
-        message = f"Du bist dabei {boss_data['name']} (Stufe {player_ilvl}) herauszufordern.\n\n" \
-                  "Der Kampf kann nicht abgebrochen werden und die Gefahr des Todes ist sehr hoch.\n\n" \
-                  "Möchtest du fortfahren?"
+        message = (
+            f"Du bist dabei, {temp_boss.name} (Stufe {actual_player_ilvl}) herauszufordern.\n\n"
+            "--- Werte des Bosses ---\n"
+            f"Lebenspunkte: {temp_boss.max_hp}\n"
+            f"Schaden: {temp_boss.damage_range[0]} - {temp_boss.damage_range[1]}\n\n"
+            "--- Deine Werte ---\n"
+            f"Lebenspunkte: {self.player.current_lp} / {self.player.max_lp}\n"
+            f"Schaden: {min_damage} - {max_damage}\n\n"
+            "Der Kampf kann nicht abgebrochen werden und die Gefahr des Todes ist sehr hoch.\n\n"
+            "Möchtest du fortfahren?"
+        )
 
         if messagebox.askyesno(title, message, parent=self):
             self.boss_arena_button.config(state=tk.DISABLED)
-            BossArenaWindow(self, self.player, boss_data, player_ilvl, on_close_callback=self.on_boss_arena_close)
+            BossArenaWindow(self, self.player, boss_data, base_player_ilvl, on_close_callback=self.on_boss_arena_close)
         else:
             self.resume_quest_loop()
 
@@ -794,6 +939,10 @@ class RpgGui(ttk.Frame):
 
     def handle_game_over(self):
         self.game_over = True
+
+        # Save the character's score before showing the game over screen
+        save_highscore(self.player)
+
         try:
             img = Image.open("assets/grabstein.png")
             img.thumbnail((220, 280))
