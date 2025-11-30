@@ -15,8 +15,11 @@ def save_game(character):
     Args:
         character (Character): The character object to save.
     """
-    if not os.path.exists(SAVE_DIR):
-        os.makedirs(SAVE_DIR)
+    try:
+        os.makedirs(SAVE_DIR, exist_ok=True)
+    except OSError as e:
+        print(f"Fehler beim Erstellen des Speicherverzeichnisses: {e}")
+        return # Abort saving if directory creation fails
 
     filename = os.path.join(SAVE_DIR, f"{character.name}.sav")
     try:
