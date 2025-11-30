@@ -67,13 +67,23 @@ class HighscoreWindow(tk.Toplevel):
         scores = load_highscores()
         for score in scores:
             copper_formatted = format_currency(score.get("copper", 0))
+
+            resources_dict = score.get("resources", {})
+            resources_str = ", ".join(f"{name}: {amount}" for name, amount in resources_dict.items())
+            if not resources_str:
+                resources_str = "N/A"
+
+            player_name = score.get("name", "")
+            if score.get("cheat_activated", False):
+                player_name += " (Cheat)"
+
             best_equipment = (
                 f"Waffe: {score.get('best_weapon', 'N/A')}, "
                 f"Kopf: {score.get('best_head', 'N/A')}, "
                 f"Brust: {score.get('best_chest', 'N/A')}"
             )
             self.tree.insert("", tk.END, values=(
-                score.get("name", ""),
+                player_name,
                 score.get("level", 0),
                 score.get("bosses_defeated", 0),
                 score.get("total_resources", 0),
