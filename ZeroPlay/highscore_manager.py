@@ -40,6 +40,9 @@ def save_highscore(character):
     best_head = character.equipment.get('Kopf').name if character.equipment.get('Kopf') else "Nichts"
     best_chest = character.equipment.get('Brust').name if character.equipment.get('Brust') else "Nichts"
 
+    # Calculate total resources collected
+    total_resources = sum(character.resources.values())
+
     new_score = {
         "name": character.name,
         "klasse": character.klasse,
@@ -47,13 +50,21 @@ def save_highscore(character):
         "copper": character.copper,
         "best_weapon": best_weapon,
         "best_head": best_head,
-        "best_chest": best_chest
+        "best_chest": best_chest,
+        "bosses_defeated": character.bosses_defeated,
+        "total_resources": total_resources
     }
 
     scores.append(new_score)
 
+    # Sort the scores by level in descending order
+    scores.sort(key=lambda x: x.get('level', 0), reverse=True)
+
+    # Keep only the top 10 scores
+    top_scores = scores[:10]
+
     try:
         with open(HIGHSCORE_FILE, 'w', encoding='utf-8') as f:
-            json.dump(scores, f, indent=4, ensure_ascii=False)
+            json.dump(top_scores, f, indent=4, ensure_ascii=False)
     except IOError as e:
         print(f"Fehler beim Speichern der Highscores: {e}")
