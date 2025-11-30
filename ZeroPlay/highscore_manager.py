@@ -40,6 +40,9 @@ def save_highscore(character):
     best_head = character.equipment.get('Kopf').name if character.equipment.get('Kopf') else "Nichts"
     best_chest = character.equipment.get('Brust').name if character.equipment.get('Brust') else "Nichts"
 
+    # Calculate total resources collected
+    total_resources = sum(character.resources.values())
+
     new_score = {
         "name": character.name,
         "klasse": character.klasse,
@@ -50,7 +53,9 @@ def save_highscore(character):
         "cheat_activated": character.cheat_activated,
         "best_weapon": best_weapon,
         "best_head": best_head,
-        "best_chest": best_chest
+        "best_chest": best_chest,
+        "bosses_defeated": character.bosses_defeated,
+        "total_resources": total_resources
     }
 
     scores.append(new_score)
