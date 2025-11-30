@@ -236,6 +236,37 @@ class RpgGui(ttk.Frame):
         self.rowconfigure(0, weight=1) # Top area
         self.rowconfigure(1, weight=0) # Bottom area for the log
 
+        # --- UI Redesign: Configure styles for UI elements ---
+        style = ttk.Style()
+        # Set a base background color that complements the stone, for areas the leather doesn't cover.
+        style.configure('TFrame', background='#4a4a4a')
+
+        # Style for widgets on the leather background
+        leather_bg_color = '#6F4E37' # Coffee brown, as a fallback and for matching
+        leather_fg_color = '#F5DEB3' # Wheat color for text
+
+        style.configure('Leather.TLabel', background=leather_bg_color, foreground=leather_fg_color, font=('Verdana', 9))
+        style.configure('Leather.TLabelFrame', background=leather_bg_color)
+        style.configure('Leather.TLabelFrame.Label', background=leather_bg_color, foreground=leather_fg_color, font=('Verdana', 10, 'bold'))
+
+        # Style for Buttons on the leather background
+        style.configure('Leather.TButton', background='#5D4037', foreground=leather_fg_color, font=('Verdana', 9, 'bold'), borderwidth=1)
+        style.map('Leather.TButton',
+            background=[('active', '#795548'), ('disabled', '#4E342E')],
+            foreground=[('disabled', '#A1887F')])
+
+        # Style for the Notebook (Tabs)
+        style.configure('Leather.TNotebook', background=leather_bg_color, borderwidth=0)
+        style.configure('Leather.TNotebook.Tab',
+            background='#5D4037', # Darker brown for inactive tab
+            foreground=leather_fg_color,
+            padding=[8, 4],
+            font=('Verdana', 9, 'bold')
+        )
+        style.map('Leather.TNotebook.Tab',
+            background=[('selected', leather_bg_color)], # Active tab matches panel bg
+            expand=[('selected', [1, 1, 1, 0])])
+
         # Create main frames for each section
         char_frame_container = ttk.Frame(self)
         char_frame_container.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
@@ -961,6 +992,27 @@ class RpgGui(ttk.Frame):
 
         # Show the custom game over window
         GameOverWindow(self, self.player, on_close_callback=self.callbacks['game_over'])
+
+    def _handle_keypress(self, event):
+        """Handles key presses to check for cheat codes."""
+        self.cheat_buffer += event.char
+        # Keep the buffer trimmed to the length of the cheat code
+        if len(self.cheat_buffer) > len(self.cheat_code):
+            self.cheat_buffer = self.cheat_buffer[-len(self.cheat_code):]
+
+        if self.cheat_buffer == self.cheat_code:
+            # Toggle immortality
+            self.player.is_immortal = not self.player.is_immortal
+
+            if self.player.is_immortal:
+                # If cheat is now active, also set the permanent flag
+                self.player.cheat_activated = True
+                self.add_to_log("CHEAT AKTIVIERT: Unsterblichkeit!")
+            else:
+                self.add_to_log("CHEAT DEAKTIVIERT: Sterblichkeit wiederhergestellt.")
+
+            self.cheat_buffer = "" # Reset buffer after activation
+
 
 class Tooltip:
     """
