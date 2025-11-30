@@ -126,6 +126,8 @@ class BlacksmithWindow(tk.Toplevel):
 
         # Check if max level is reached
         if self.selected_item.upgrade_level >= max_upgrades:
+            max_stats_text = "Aktuelle Werte (Max):\n" + "\n".join([f"  {stat}: {val} (Max)" for stat, val in self.selected_item.stats_boost.items()])
+            self.current_stats_label.config(text=max_stats_text)
             self.next_stats_label.config(text="Maximale Stufe erreicht")
             self.cost_label.config(text="")
             self.upgrade_button.config(state=tk.DISABLED)
@@ -154,13 +156,13 @@ class BlacksmithWindow(tk.Toplevel):
 
         success, message = self.blacksmith.upgrade_item(self.player, self.selected_item)
 
+        # Refresh the display immediately after the upgrade attempt to show resource changes.
+        self.update_display()
+
         if success:
             messagebox.showinfo("Erfolg!", message, parent=self)
         else:
             messagebox.showwarning("Fehler", message, parent=self)
-
-        # Refresh the display regardless of outcome
-        self.update_display()
 
 
     def on_close(self):
