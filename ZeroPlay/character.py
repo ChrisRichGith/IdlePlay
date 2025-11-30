@@ -226,9 +226,10 @@ class Character:
             # Any item is an upgrade if the slot is empty, provided it has a positive score
             return item_from_inventory.get_weighted_score(main_stat) > 0
 
-        # Compare the weighted scores
-        new_item_score = item_from_inventory.get_weighted_score(main_stat)
-        equipped_item_score = equipped_item.get_weighted_score(main_stat)
+        # For auto-selling, compare the new item's base score to the equipped item's base score.
+        # This prevents selling items that *could* be better if upgraded.
+        new_item_score = item_from_inventory.get_base_weighted_score(main_stat)
+        equipped_item_score = equipped_item.get_base_weighted_score(main_stat)
 
         return new_item_score > equipped_item_score
 

@@ -142,6 +142,28 @@ class Item:
         score = total_stats * (rarity_modifier ** 2)
         return int(score)
 
+    def get_base_weighted_score(self, main_stat, main_stat_weight=1.5):
+        """
+        Calculates a weighted score for an item based on a main stat, using BASE stats.
+
+        Args:
+            main_stat (str): The primary stat for the character class.
+            main_stat_weight (float): The multiplier for the main stat.
+
+        Returns:
+            float: The calculated weighted score of the item.
+        """
+        if not self.base_stats:
+            return 0
+
+        score = 0
+        for stat, value in self.base_stats.items():
+            if stat == main_stat:
+                score += value * main_stat_weight
+            else:
+                score += value # Other stats have a weight of 1
+        return score
+
     def is_boss_item(self):
         """Checks if the item is a boss item by its name prefix."""
         return self.original_name.startswith("Boss ")
