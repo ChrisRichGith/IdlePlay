@@ -36,6 +36,7 @@ class Character:
         self.autosell_unlocked_notified = False
         self.cheat_activated = False # Flag for highscore
         self.is_immortal = False    # God mode flag
+        self.bosses_defeated = 0
 
         # Derived stats
         self.max_lp = 0
