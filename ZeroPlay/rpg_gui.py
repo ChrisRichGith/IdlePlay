@@ -108,7 +108,6 @@ class RpgGui(ttk.Frame):
         self.master.bind("<Key>", self.handle_keypress)
 
         self._setup_string_vars()
-        self._setup_styles() # Call style setup before creating widgets
 
         # Apply the stone background to the entire frame
         apply_tiled_background(self, "assets/stone_background.png")
@@ -158,38 +157,6 @@ class RpgGui(ttk.Frame):
         self.energie_label_var = tk.StringVar()
         self.wut_label_var = tk.StringVar()
 
-    def _setup_styles(self):
-        """Configures all the ttk styles for the UI redesign."""
-        self.style = ttk.Style()
-        # Set a base background color that complements the stone, for areas the leather doesn't cover.
-        self.style.configure('TFrame', background='#4a4a4a')
-
-        # Style for widgets on the leather background
-        leather_bg_color = '#6F4E37' # Coffee brown, as a fallback and for matching
-        leather_fg_color = '#F5DEB3' # Wheat color for text
-
-        self.style.configure('Leather.TLabel', background=leather_bg_color, foreground=leather_fg_color, font=('Verdana', 9))
-        self.style.configure('Leather.TLabelFrame', background=leather_bg_color)
-        self.style.configure('Leather.TLabelFrame.Label', background=leather_bg_color, foreground=leather_fg_color, font=('Verdana', 10, 'bold'))
-
-        # Style for Buttons on the leather background
-        self.style.configure('Leather.TButton', background='#5D4037', foreground=leather_fg_color, font=('Verdana', 9, 'bold'), borderwidth=1)
-        self.style.map('Leather.TButton',
-            background=[('active', '#795548'), ('disabled', '#4E342E')],
-            foreground=[('disabled', '#A1887F')])
-
-        # Style for the Notebook (Tabs)
-        self.style.configure('Leather.TNotebook', background=leather_bg_color, borderwidth=0)
-        self.style.configure('Leather.TNotebook.Tab',
-            background='#5D4037', # Darker brown for inactive tab
-            foreground=leather_fg_color,
-            padding=[8, 4],
-            font=('Verdana', 9, 'bold')
-        )
-        self.style.map('Leather.TNotebook.Tab',
-            background=[('selected', leather_bg_color)], # Active tab matches panel bg
-            expand=[('selected', [1, 1, 1, 0])])
-
     def create_widgets(self):
         """Creates and places all the widgets in the window."""
         # Main layout grid
@@ -198,37 +165,6 @@ class RpgGui(ttk.Frame):
         self.columnconfigure(2, weight=1, uniform="char_inv_group") # Inventory
         self.rowconfigure(0, weight=1) # Top area
         self.rowconfigure(1, weight=0) # Bottom area for the log
-
-        # --- UI Redesign: Configure styles for UI elements ---
-        style = ttk.Style()
-        # Set a base background color that complements the stone, for areas the leather doesn't cover.
-        style.configure('TFrame', background='#4a4a4a')
-
-        # Style for widgets on the leather background
-        leather_bg_color = '#6F4E37' # Coffee brown, as a fallback and for matching
-        leather_fg_color = '#F5DEB3' # Wheat color for text
-
-        style.configure('Leather.TLabel', background=leather_bg_color, foreground=leather_fg_color, font=('Verdana', 9))
-        style.configure('Leather.TLabelFrame', background=leather_bg_color)
-        style.configure('Leather.TLabelFrame.Label', background=leather_bg_color, foreground=leather_fg_color, font=('Verdana', 10, 'bold'))
-
-        # Style for Buttons on the leather background
-        style.configure('Leather.TButton', background='#5D4037', foreground=leather_fg_color, font=('Verdana', 9, 'bold'), borderwidth=1)
-        style.map('Leather.TButton',
-            background=[('active', '#795548'), ('disabled', '#4E342E')],
-            foreground=[('disabled', '#A1887F')])
-
-        # Style for the Notebook (Tabs)
-        style.configure('Leather.TNotebook', background=leather_bg_color, borderwidth=0)
-        style.configure('Leather.TNotebook.Tab',
-            background='#5D4037', # Darker brown for inactive tab
-            foreground=leather_fg_color,
-            padding=[8, 4],
-            font=('Verdana', 9, 'bold')
-        )
-        style.map('Leather.TNotebook.Tab',
-            background=[('selected', leather_bg_color)], # Active tab matches panel bg
-            expand=[('selected', [1, 1, 1, 0])])
 
         # Create main frames for each section
         char_frame_container = ttk.Frame(self)
