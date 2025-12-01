@@ -1,11 +1,16 @@
 # styling.py
 """
-Centralized styling configurations for the Tkinter UI.
+Centralized styling setup for the ZeroPlay RPG application.
 """
 from tkinter import ttk
 
-def configure_styles(style):
-    """Configures all the ttk styles for the application."""
+def setup_styles():
+    """
+    Configures and returns a ttk.Style object with all custom styles for the app.
+    This should be called once at application startup.
+    """
+    style = ttk.Style()
+
     # Set a base background color that complements the stone, for areas the leather doesn't cover.
     style.configure('TFrame', background='#4a4a4a')
 
@@ -34,3 +39,5 @@ def configure_styles(style):
     style.map('Leather.TNotebook.Tab',
         background=[('selected', leather_bg_color)], # Active tab matches panel bg
         expand=[('selected', [1, 1, 1, 0])])
+
+    return style
