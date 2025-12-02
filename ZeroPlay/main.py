@@ -10,7 +10,7 @@ from class_selection_frame import ClassSelectionFrame
 from rpg_gui import RpgGui
 from save_load_system import save_game, load_game, get_save_files, SAVE_DIR
 from highscore_gui import HighscoreWindow
-from styling import setup_styles
+from styling import configure_styles
 import os
 
 class Game:
@@ -20,10 +20,10 @@ class Game:
         self.root.title("Chronicle of the Idle Hero")
         self.root.attributes('-zoomed', True) # Alternative for maximizing on Linux
 
-        # --- Global Style Setup ---
-        # Initialize styles once and hold a reference to the style object
-        self.style = setup_styles()
-        self.style.theme_use('clam')
+        # Apply a modern theme and configure custom styles globally
+        style = ttk.Style(self.root)
+        style.theme_use('clam')
+        configure_styles(style)
 
         self.current_frame = None
         self.character = None
