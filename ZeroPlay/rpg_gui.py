@@ -108,6 +108,7 @@ class RpgGui(ttk.Frame):
         self.master.bind("<Key>", self.handle_keypress)
 
         self._setup_string_vars()
+        self._setup_styles() # Call style setup before creating widgets
 
         # Apply the stone background to the entire frame
         apply_tiled_background(self, "assets/stone_background.png")
@@ -157,6 +158,11 @@ class RpgGui(ttk.Frame):
         self.energie_label_var = tk.StringVar()
         self.wut_label_var = tk.StringVar()
 
+    def _setup_styles(self):
+        """Configures all the ttk styles for the UI redesign."""
+        # Get the style object from the root window, do not create a new one.
+        self.style = self.master.style
+
     def create_widgets(self):
         """Creates and places all the widgets in the window."""
         # Main layout grid
@@ -198,33 +204,6 @@ class RpgGui(ttk.Frame):
         self._create_inventory_frame(inventory_tab)
 
         self._create_log_frame(log_frame)
-
-    def _apply_leather_background(self, widget):
-        """Applies the tiled leather background to a given widget."""
-        if not self.bg_leather_pil:
-            widget.configure(bg="#6F4E37") # Coffee brown fallback
-            return
-
-        canvas = tk.Canvas(widget)
-        canvas.place(x=0, y=0, relwidth=1, relheight=1)
-
-        def tile_background(event):
-            width = event.width
-            height = event.height
-            if width <= 1 or height <= 1: return
-
-            bg_image = Image.new('RGB', (width, height))
-            tile_w, tile_h = self.bg_leather_pil.size
-            for x in range(0, width, tile_w):
-                for y in range(0, height, tile_h):
-                    bg_image.paste(self.bg_leather_pil, (x, y))
-
-            # Store reference on the canvas itself to avoid garbage collection
-            canvas.bg_photo = ImageTk.PhotoImage(bg_image)
-            canvas.create_image(0, 0, image=canvas.bg_photo, anchor='nw')
-            canvas.lower()
-
-        widget.bind("<Configure>", tile_background)
 
     def _create_character_frame(self, parent):
         char_frame = ttk.LabelFrame(parent, text="Charakterstatus", padding="10", style='Leather.TLabelFrame')
