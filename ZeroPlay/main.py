@@ -21,9 +21,11 @@ class Game:
         self.root.attributes('-zoomed', True) # Alternative for maximizing on Linux
 
         # Apply a modern theme and configure custom styles globally
-        self.style = ttk.Style(self.root)
-        self.style.theme_use('clam')
-        configure_styles(self.style)
+        # By attaching the style object to the root window, we prevent it
+        # from being garbage-collected.
+        root.style = ttk.Style(root)
+        root.style.theme_use('clam')
+        configure_styles(root.style)
 
         self.current_frame = None
         self.character = None
