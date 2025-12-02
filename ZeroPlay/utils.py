@@ -28,9 +28,9 @@ def apply_tiled_background(widget, image_path):
 
     # Create a Canvas that will hold the background image
     canvas = tk.Canvas(widget)
-    # Place it to fill the entire widget and send it to the back
+    # Place it to fill the entire widget. Since it's created before other widgets,
+    # it will automatically be in the background.
     canvas.place(x=0, y=0, relwidth=1, relheight=1)
-    canvas.lower()
 
     def tile_background(event):
         """Callback function to redraw the background when the widget is resized."""
