@@ -6,6 +6,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from PIL import Image, ImageTk
 from game_data import CLASSES
+from utils import apply_tiled_background
 
 class ClassSelectionFrame(ttk.Frame):
     """Manages the class selection frame."""
@@ -16,6 +17,9 @@ class ClassSelectionFrame(ttk.Frame):
 
         self.player_name = ""
         self.selected_class = "Krieger" # Default to Krieger
+
+        # Apply the stone background to the entire frame
+        apply_tiled_background(self, "assets/stone_background.png")
 
         self.create_widgets()
 
