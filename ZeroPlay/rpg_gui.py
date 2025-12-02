@@ -108,6 +108,7 @@ class RpgGui(ttk.Frame):
         self.master.bind("<Key>", self.handle_keypress)
 
         self._setup_string_vars()
+        self._setup_styles() # Call style setup before creating widgets
 
         # Apply the stone background to the entire frame
         apply_tiled_background(self, "assets/stone_background.png")
@@ -156,6 +157,11 @@ class RpgGui(ttk.Frame):
         self.xp_label_var = tk.StringVar()
         self.energie_label_var = tk.StringVar()
         self.wut_label_var = tk.StringVar()
+
+    def _setup_styles(self):
+        """Configures all the ttk styles for the UI redesign."""
+        # Get the style object from the root window, do not create a new one.
+        self.style = self.master.style
 
     def create_widgets(self):
         """Creates and places all the widgets in the window."""
