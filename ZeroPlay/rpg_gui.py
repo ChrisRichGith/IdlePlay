@@ -107,6 +107,7 @@ class RpgGui(ttk.Frame):
         self.typed_string = ""
         self.master.bind("<Key>", self.handle_keypress)
 
+        self._setup_styles()
         self._setup_string_vars()
         self._setup_styles() # Call style setup before creating widgets
 
@@ -171,6 +172,14 @@ class RpgGui(ttk.Frame):
 
         log_frame = ttk.Frame(self)
         log_frame.grid(row=1, column=0, columnspan=3, sticky="nsew", padx=10, pady=(0, 10))
+
+        # Apply the themed background to the main frames
+        apply_tiled_background(self, "assets/leather_background.png")
+        apply_tiled_background(char_frame_container, "assets/leather_background.png")
+        apply_tiled_background(actions_frame, "assets/leather_background.png")
+        apply_tiled_background(inventory_frame, "assets/leather_background.png")
+        apply_tiled_background(log_frame, "assets/leather_background.png")
+
 
         # Populate the frames
         self._create_character_frame(char_frame_container)
@@ -347,7 +356,7 @@ class RpgGui(ttk.Frame):
         apply_tiled_background(self.inv_frame, "assets/leather_background.png")
         self.inv_frame.rowconfigure(0, weight=1)
         self.inv_frame.columnconfigure(0, weight=1)
-        self.inventory_listbox = tk.Listbox(self.inv_frame, bg="#2B2B2B", fg="white", selectbackground="#0078D7")
+        self.inventory_listbox = tk.Listbox(self.inv_frame, bg="#2B2B2B", fg="#FFFDE7", selectbackground="#5D4037", selectforeground="#FFFFFF", relief="flat", borderwidth=0)
         self.inventory_listbox.grid(row=0, column=0, sticky="nsew")
         scrollbar = ttk.Scrollbar(self.inv_frame, orient=tk.VERTICAL, command=self.inventory_listbox.yview)
         self.inventory_listbox.config(yscrollcommand=scrollbar.set)
