@@ -109,63 +109,13 @@ class RpgGui(ttk.Frame):
 
         self._setup_styles()
         self._setup_string_vars()
+        self._setup_styles() # Call style setup before creating widgets
+
+        # Apply the stone background to the entire frame
+        apply_tiled_background(self, "assets/stone_background.png")
+
         self.create_widgets()
         self.update_display()
-
-    def _setup_styles(self):
-        """Configures ttk styles for the themed UI."""
-        style = ttk.Style()
-        style.theme_use('clam') # 'clam' is a good base for custom styling
-
-        # Define colors
-        bg_color = "#3E2723"  # Dark brown, like old leather
-        fg_color = "#FFFDE7"  # Parchment/off-white color for text
-        select_bg_color = "#5D4037" # A slightly lighter brown for selections
-
-        # Configure the main Frame style (will apply to most ttk.Frames)
-        style.configure('TFrame', background=bg_color)
-
-        # Configure LabelFrame style
-        style.configure('TLabelframe',
-                        background=bg_color,
-                        borderwidth=1)
-        style.configure('TLabelframe.Label',
-                        background=bg_color,
-                        foreground=fg_color,
-                        font=("", 10, "bold"))
-
-        # Configure Label style
-        style.configure('TLabel',
-                        background=bg_color,
-                        foreground=fg_color)
-
-        # Configure Button style
-        style.configure('TButton',
-                        background="#6D4C41", # A slightly lighter brown for buttons
-                        foreground=fg_color,
-                        borderwidth=1,
-                        relief=tk.RAISED,
-                        padding=5)
-        style.map('TButton',
-                  background=[('active', "#8D6E63"), ('disabled', '#4E342E')],
-                  foreground=[('disabled', '#A1887F')])
-
-        # Configure Notebook style
-        style.configure("TNotebook", background=bg_color, borderwidth=0)
-        style.configure("TNotebook.Tab",
-                        background="#5D4037",
-                        foreground=fg_color,
-                        padding=[10, 5],
-                        borderwidth=0)
-        style.map("TNotebook.Tab",
-                  background=[("selected", bg_color)],
-                  expand=[("selected", [1, 1, 1, 0])])
-
-        # Configure Progressbar style
-        style.configure("TProgressbar",
-                        troughcolor=bg_color,
-                        background="#FFC107", # Amber/gold color for the bar
-                        thickness=15)
 
     def handle_keypress(self, event):
         """Handles key presses for cheat codes."""
@@ -192,6 +142,11 @@ class RpgGui(ttk.Frame):
         self.xp_label_var = tk.StringVar()
         self.energie_label_var = tk.StringVar()
         self.wut_label_var = tk.StringVar()
+
+    def _setup_styles(self):
+        """Configures all the ttk styles for the UI redesign."""
+        # Get the style object from the root window, do not create a new one.
+        self.style = self.master.style
 
     def create_widgets(self):
         """Creates and places all the widgets in the window."""
@@ -246,6 +201,7 @@ class RpgGui(ttk.Frame):
     def _create_character_frame(self, parent):
         char_frame = ttk.LabelFrame(parent, text="Charakterstatus", padding="10")
         char_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 10), anchor='n')
+        apply_tiled_background(char_frame, "assets/leather_background.png") # Apply the leather background here
         char_frame.columnconfigure(2, weight=1) # Allow portrait column to expand
 
         # --- Left side: Stats ---
@@ -307,6 +263,7 @@ class RpgGui(ttk.Frame):
     def _create_actions_frame(self, parent):
         actions_frame = ttk.LabelFrame(parent, text="Aktionen", padding="10")
         actions_frame.pack(fill=tk.Y, expand=False, anchor='n')
+        apply_tiled_background(actions_frame, "assets/leather_background.png")
 
         self.quest_button = ttk.Button(actions_frame, text="Neue Quest beginnen", command=self.start_quest)
         self.quest_button.pack(fill=tk.X, pady=5)
@@ -325,7 +282,7 @@ class RpgGui(ttk.Frame):
         self.progress_bar = ttk.Progressbar(actions_frame, orient='horizontal', mode='determinate', length=120)
         self.progress_bar.pack(fill=tk.X, pady=(10, 5))
 
-        self.loot_status_text = tk.Text(actions_frame, height=2, wrap=tk.WORD, bg="#2B2B2B", fg="#FFFDE7", relief="flat")
+        self.loot_status_text = tk.Text(actions_frame, height=2, wrap=tk.WORD, bg="lightgrey", relief="flat", fg="gray")
         self.loot_status_text.pack(fill=tk.X, pady=5)
         self.loot_status_text.config(state=tk.DISABLED)
 
@@ -360,11 +317,12 @@ class RpgGui(ttk.Frame):
         """Creates the quest log text widget."""
         log_labelframe = ttk.LabelFrame(parent, text="Log", padding="10")
         log_labelframe.pack(fill=tk.X, expand=True)
+        apply_tiled_background(log_labelframe, "assets/leather_background.png")
 
         log_labelframe.rowconfigure(0, weight=1)
         log_labelframe.columnconfigure(0, weight=1)
 
-        self.quest_log = tk.Text(log_labelframe, height=10, wrap=tk.WORD, bg="#2B2B2B", fg="#FFFDE7", relief="flat")
+        self.quest_log = tk.Text(log_labelframe, height=10, wrap=tk.WORD, bg="#2B2B2B", fg="white", relief="flat")
         self.quest_log.grid(row=0, column=0, sticky="nsew")
         scrollbar = ttk.Scrollbar(log_labelframe, orient=tk.VERTICAL, command=self.quest_log.yview)
         self.quest_log.config(yscrollcommand=scrollbar.set)
@@ -385,6 +343,7 @@ class RpgGui(ttk.Frame):
         parent.columnconfigure(1, weight=1)
         equip_frame = ttk.LabelFrame(parent, text="Angelegte Ausrüstung", padding="10")
         equip_frame.pack(fill=tk.X, padx=10, pady=10)
+        apply_tiled_background(equip_frame, "assets/leather_background.png")
         for i, (slot, var) in enumerate(self.equipment_vars.items()):
             ttk.Label(equip_frame, text=f"{slot}:").grid(row=i, column=0, sticky="w")
             ttk.Label(equip_frame, textvariable=var).grid(row=i, column=1, sticky="w", padx=5)
@@ -394,6 +353,7 @@ class RpgGui(ttk.Frame):
         parent.columnconfigure(0, weight=1)
         self.inv_frame = ttk.LabelFrame(parent, text="Rucksack", padding="10")
         self.inv_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        apply_tiled_background(self.inv_frame, "assets/leather_background.png")
         self.inv_frame.rowconfigure(0, weight=1)
         self.inv_frame.columnconfigure(0, weight=1)
         self.inventory_listbox = tk.Listbox(self.inv_frame, bg="#2B2B2B", fg="#FFFDE7", selectbackground="#5D4037", selectforeground="#FFFFFF", relief="flat", borderwidth=0)
