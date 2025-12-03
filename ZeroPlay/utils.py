@@ -4,7 +4,65 @@ Contains utility functions for the game, such as currency formatting.
 """
 import tkinter as tk
 from PIL import Image, ImageTk
-import os
+
+
+def apply_tiled_background(widget, image_path):
+    """
+    Applies a tiled background image to a given widget.
+
+    The image is drawn on a Canvas that is placed behind all other children
+    of the widget. The canvas resizes with the widget to redraw the background.
+    """
+    try:
+        # Open the image using PIL and store it on the widget to prevent
+        # it from being garbage collected.
+        pil_image = Image.open(image_path)
+        setattr(widget, f'_bg_pil_{image_path.replace("/", "_")}', pil_image)
+
+    except FileNotFoundError:
+        # Fallback to a solid color if the image is not found.
+        # A semi-dark grey that fits the theme
+        widget.config(bg="#4a4a4a")
+        print(f"Hintergrundbild nicht gefunden: {image_path}")
+        return
+
+    # Create a Canvas that will hold the background image
+    canvas = tk.Canvas(widget)
+    # Place it to fill the entire widget. Since it's created before other widgets,
+    # it will automatically be in the background.
+    canvas.place(x=0, y=0, relwidth=1, relheight=1)
+
+    def tile_background(event):
+        """Callback function to redraw the background when the widget is resized."""
+        # Get the stored PIL image from the widget
+        bg_pil_image = getattr(widget, f'_bg_pil_{image_path.replace("/", "_")}', None)
+        if not bg_pil_image:
+            return
+
+        width = widget.winfo_width()
+        height = widget.winfo_height()
+
+        # If the window is not yet drawn, its size can be 1, so we do nothing
+        if width <= 1 or height <= 1:
+            return
+
+        # Create a new blank image of the widget's size
+        bg_image = Image.new('RGB', (width, height))
+        tile_w, tile_h = bg_pil_image.size
+
+        # Paste the tile across the new image
+        for x in range(0, width, tile_w):
+            for y in range(0, height, tile_h):
+                bg_image.paste(bg_pil_image, (x, y))
+
+        # Convert the PIL image to a PhotoImage that Tkinter can use.
+        # Store a reference on the canvas to prevent garbage collection.
+        canvas.bg_photo_tk = ImageTk.PhotoImage(bg_image)
+        canvas.create_image(0, 0, image=canvas.bg_photo_tk, anchor='nw')
+
+    # Bind the tiling function to the widget's <Configure> event
+    widget.bind("<Configure>", tile_background, add="+")
+
 
 def format_currency(copper_amount):
     """
@@ -55,50 +113,3 @@ def center_window(window, parent):
 
     # Set the geometry of the popup window to place it correctly
     window.geometry(f'{width}x{height}+{x}+{y}')
-
-def apply_tiled_background(widget, image_path):
-    """
-    Applies a tiled background image to a widget.
-    The image is drawn on a canvas that resizes with the widget.
-    """
-    # Create a canvas within the widget, placed to fill the entire widget
-    canvas = tk.Canvas(widget)
-    canvas.place(relwidth=1, relheight=1)
-
-    # Ensure the canvas is at the bottom of the stacking order
-    canvas.lower()
-
-    try:
-        # Open the image and create a PhotoImage object
-        # Store it on the canvas to prevent garbage collection
-        if not os.path.exists(image_path):
-            raise FileNotFoundError(f"Background image not found at: {image_path}")
-
-        image = Image.open(image_path)
-        canvas.image = ImageTk.PhotoImage(image)
-
-        def tile_background(event):
-            """Callback to redraw the background when the canvas is resized."""
-            # Get canvas dimensions
-            canvas_width = event.width
-            canvas_height = event.height
-
-            # Clear any previous drawings
-            canvas.delete("all")
-
-            # Get image dimensions
-            image_width = canvas.image.width()
-            image_height = canvas.image.height()
-
-            # Tile the image across the canvas
-            for y in range(0, canvas_height, image_height):
-                for x in range(0, canvas_width, image_width):
-                    canvas.create_image(x, y, anchor="nw", image=canvas.image)
-
-        # Bind the tiling function to the canvas's <Configure> event
-        canvas.bind("<Configure>", tile_background)
-
-    except (FileNotFoundError, tk.TclError) as e:
-        # Fallback to a solid color if the image fails to load
-        print(f"Error loading background image: {e}. Using fallback color.")
-        canvas.config(bg="#3B3B3B") # A dark gray as a fallback
