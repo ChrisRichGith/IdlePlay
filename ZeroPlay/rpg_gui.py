@@ -17,7 +17,7 @@ from blacksmith_gui import BlacksmithWindow
 from boss_arena_gui import BossArenaWindow
 from save_load_system import save_game
 from highscore_manager import save_highscore
-from utils import format_currency, center_window
+from utils import format_currency, center_window, apply_tiled_background
 from game_over_gui import GameOverWindow
 from game_data import BOSS_TIERS
 
@@ -108,6 +108,11 @@ class RpgGui(ttk.Frame):
         self.master.bind("<Key>", self.handle_keypress)
 
         self._setup_string_vars()
+        self._setup_styles() # Call style setup before creating widgets
+
+        # Apply the stone background to the entire frame
+        apply_tiled_background(self, "assets/stone_background.png")
+
         self.create_widgets()
         self.update_display()
 
@@ -136,6 +141,11 @@ class RpgGui(ttk.Frame):
         self.xp_label_var = tk.StringVar()
         self.energie_label_var = tk.StringVar()
         self.wut_label_var = tk.StringVar()
+
+    def _setup_styles(self):
+        """Configures all the ttk styles for the UI redesign."""
+        # Get the style object from the root window, do not create a new one.
+        self.style = self.master.style
 
     def create_widgets(self):
         """Creates and places all the widgets in the window."""
@@ -182,6 +192,7 @@ class RpgGui(ttk.Frame):
     def _create_character_frame(self, parent):
         char_frame = ttk.LabelFrame(parent, text="Charakterstatus", padding="10")
         char_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 10), anchor='n')
+        apply_tiled_background(char_frame, "assets/leather_background.png") # Apply the leather background here
         char_frame.columnconfigure(2, weight=1) # Allow portrait column to expand
 
         # --- Left side: Stats ---
@@ -243,6 +254,7 @@ class RpgGui(ttk.Frame):
     def _create_actions_frame(self, parent):
         actions_frame = ttk.LabelFrame(parent, text="Aktionen", padding="10")
         actions_frame.pack(fill=tk.Y, expand=False, anchor='n')
+        apply_tiled_background(actions_frame, "assets/leather_background.png")
 
         self.quest_button = ttk.Button(actions_frame, text="Neue Quest beginnen", command=self.start_quest)
         self.quest_button.pack(fill=tk.X, pady=5)
@@ -296,6 +308,7 @@ class RpgGui(ttk.Frame):
         """Creates the quest log text widget."""
         log_labelframe = ttk.LabelFrame(parent, text="Log", padding="10")
         log_labelframe.pack(fill=tk.X, expand=True)
+        apply_tiled_background(log_labelframe, "assets/leather_background.png")
 
         log_labelframe.rowconfigure(0, weight=1)
         log_labelframe.columnconfigure(0, weight=1)
@@ -321,6 +334,7 @@ class RpgGui(ttk.Frame):
         parent.columnconfigure(1, weight=1)
         equip_frame = ttk.LabelFrame(parent, text="Angelegte Ausrüstung", padding="10")
         equip_frame.pack(fill=tk.X, padx=10, pady=10)
+        apply_tiled_background(equip_frame, "assets/leather_background.png")
         for i, (slot, var) in enumerate(self.equipment_vars.items()):
             ttk.Label(equip_frame, text=f"{slot}:").grid(row=i, column=0, sticky="w")
             ttk.Label(equip_frame, textvariable=var).grid(row=i, column=1, sticky="w", padx=5)
@@ -330,6 +344,7 @@ class RpgGui(ttk.Frame):
         parent.columnconfigure(0, weight=1)
         self.inv_frame = ttk.LabelFrame(parent, text="Rucksack", padding="10")
         self.inv_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        apply_tiled_background(self.inv_frame, "assets/leather_background.png")
         self.inv_frame.rowconfigure(0, weight=1)
         self.inv_frame.columnconfigure(0, weight=1)
         self.inventory_listbox = tk.Listbox(self.inv_frame, bg="#2B2B2B", fg="white", selectbackground="#0078D7")
