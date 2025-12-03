@@ -2,6 +2,9 @@
 """
 Contains utility functions for the game, such as currency formatting.
 """
+import tkinter as tk
+from PIL import Image, ImageTk
+import os
 
 def format_currency(copper_amount):
     """
@@ -52,3 +55,50 @@ def center_window(window, parent):
 
     # Set the geometry of the popup window to place it correctly
     window.geometry(f'{width}x{height}+{x}+{y}')
+
+def apply_tiled_background(widget, image_path):
+    """
+    Applies a tiled background image to a widget.
+    The image is drawn on a canvas that resizes with the widget.
+    """
+    # Create a canvas within the widget, placed to fill the entire widget
+    canvas = tk.Canvas(widget)
+    canvas.place(relwidth=1, relheight=1)
+
+    # Ensure the canvas is at the bottom of the stacking order
+    canvas.lower()
+
+    try:
+        # Open the image and create a PhotoImage object
+        # Store it on the canvas to prevent garbage collection
+        if not os.path.exists(image_path):
+            raise FileNotFoundError(f"Background image not found at: {image_path}")
+
+        image = Image.open(image_path)
+        canvas.image = ImageTk.PhotoImage(image)
+
+        def tile_background(event):
+            """Callback to redraw the background when the canvas is resized."""
+            # Get canvas dimensions
+            canvas_width = event.width
+            canvas_height = event.height
+
+            # Clear any previous drawings
+            canvas.delete("all")
+
+            # Get image dimensions
+            image_width = canvas.image.width()
+            image_height = canvas.image.height()
+
+            # Tile the image across the canvas
+            for y in range(0, canvas_height, image_height):
+                for x in range(0, canvas_width, image_width):
+                    canvas.create_image(x, y, anchor="nw", image=canvas.image)
+
+        # Bind the tiling function to the canvas's <Configure> event
+        canvas.bind("<Configure>", tile_background)
+
+    except (FileNotFoundError, tk.TclError) as e:
+        # Fallback to a solid color if the image fails to load
+        print(f"Error loading background image: {e}. Using fallback color.")
+        canvas.config(bg="#3B3B3B") # A dark gray as a fallback
