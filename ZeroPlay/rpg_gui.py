@@ -108,50 +108,8 @@ class RpgGui(ttk.Frame):
         self.master.bind("<Key>", self.handle_keypress)
 
         self._setup_string_vars()
-        self._setup_styles() # Call style setup before creating widgets
-        # --- UI Redesign: Background Canvas ---
-        try:
-            self.bg_stone_pil = Image.open("assets/stone_background.png")
-            self.bg_leather_pil = Image.open("assets/leather_background.png")
-        except FileNotFoundError:
-            self.bg_stone_pil = None
-            self.bg_leather_pil = None
-        self.background_canvas = tk.Canvas(self)
-        self.background_canvas.place(x=0, y=0, relwidth=1, relheight=1)
-        self.bind("<Configure>", self._draw_tiled_background)
-        # --- End UI Redesign ---
-
         self.create_widgets()
         self.update_display()
-
-    def _draw_tiled_background(self, event):
-        """Draws the tiled stone background onto the canvas."""
-        if not self.bg_stone_pil:
-            self.background_canvas.config(bg="#3b3b3b")  # Dark grey fallback
-            return
-
-        width = self.winfo_width()
-        height = self.winfo_height()
-
-        # If window is not yet drawn, width/height can be 1, do nothing
-        if width <= 1 or height <= 1:
-            return
-
-        # Create a new image to hold the tiled background
-        bg_image = Image.new('RGB', (width, height))
-        tile_w, tile_h = self.bg_stone_pil.size
-
-        # Tile the image
-        for x in range(0, width, tile_w):
-            for y in range(0, height, tile_h):
-                bg_image.paste(self.bg_stone_pil, (x, y))
-
-        # Convert to PhotoImage, keep a reference, and draw on canvas
-        self.bg_stone_tk = ImageTk.PhotoImage(bg_image)
-        self.background_canvas.create_image(0, 0, image=self.bg_stone_tk, anchor='nw')
-
-        # Keep the canvas at the bottom of the stacking order
-        self.background_canvas.lower()
 
     def handle_keypress(self, event):
         """Handles key presses for cheat codes."""
@@ -159,27 +117,18 @@ class RpgGui(ttk.Frame):
         # Keep the last 20 characters to avoid overly long strings
         self.typed_string = self.typed_string[-20:]
 
-        # --- God Mode Cheat ---
-        if "ordilogicus" in self.typed_string:
-            self.pause_quest_loop()
-            # Toggle immortality and set the permanent cheat flag
-            self.player.is_immortal = not self.player.is_immortal
-            self.player.cheat_activated = True  # Mark as cheater for highscore
-
-            status = "aktiviert" if self.player.is_immortal else "deaktiviert"
-            self.set_loot_text(f"Cheat: Unverwundbarkeit {status}")
-            self.update_display()
-            self.typed_string = "" # Reset after use
-            self.resume_quest_loop()
-
-        # --- Resource Cheat ---
-        elif "showmethemoney" in self.typed_string:
-            self.pause_quest_loop()
-            self.player.add_cheat_resources() # This method also sets cheat_activated
+        if "showmethemoney" in self.typed_string:
+            self.player.add_cheat_resources()
             self.set_loot_text("Cheat: +100 Eisenerz, +100 Juwel")
             self.update_display()
             self.typed_string = "" # Reset after use
-            self.resume_quest_loop()
+
+        if "ordilogicus" in self.typed_string:
+            self.player.is_immortal = not self.player.is_immortal
+            self.player.cheat_activated = True # Mark that a cheat was used
+            message = "Unsterblichkeit aktiviert!" if self.player.is_immortal else "Unsterblichkeit deaktiviert."
+            self.add_to_log(f"CHEAT: {message}")
+            self.typed_string = "" # Reset after use
 
     def _setup_string_vars(self):
         """Creates tkinter StringVars to link data to labels."""
@@ -195,38 +144,6 @@ class RpgGui(ttk.Frame):
         self.energie_label_var = tk.StringVar()
         self.wut_label_var = tk.StringVar()
 
-    def _setup_styles(self):
-        """Configures all the ttk styles for the UI redesign."""
-        self.style = ttk.Style()
-        # Set a base background color that complements the stone, for areas the leather doesn't cover.
-        self.style.configure('TFrame', background='#4a4a4a')
-
-        # Style for widgets on the leather background
-        leather_bg_color = '#6F4E37' # Coffee brown, as a fallback and for matching
-        leather_fg_color = '#F5DEB3' # Wheat color for text
-
-        self.style.configure('Leather.TLabel', background=leather_bg_color, foreground=leather_fg_color, font=('Verdana', 9))
-        self.style.configure('Leather.TLabelFrame', background=leather_bg_color)
-        self.style.configure('Leather.TLabelFrame.Label', background=leather_bg_color, foreground=leather_fg_color, font=('Verdana', 10, 'bold'))
-
-        # Style for Buttons on the leather background
-        self.style.configure('Leather.TButton', background='#5D4037', foreground=leather_fg_color, font=('Verdana', 9, 'bold'), borderwidth=1)
-        self.style.map('Leather.TButton',
-            background=[('active', '#795548'), ('disabled', '#4E342E')],
-            foreground=[('disabled', '#A1887F')])
-
-        # Style for the Notebook (Tabs)
-        self.style.configure('Leather.TNotebook', background=leather_bg_color, borderwidth=0)
-        self.style.configure('Leather.TNotebook.Tab',
-            background='#5D4037', # Darker brown for inactive tab
-            foreground=leather_fg_color,
-            padding=[8, 4],
-            font=('Verdana', 9, 'bold')
-        )
-        self.style.map('Leather.TNotebook.Tab',
-            background=[('selected', leather_bg_color)], # Active tab matches panel bg
-            expand=[('selected', [1, 1, 1, 0])])
-
     def create_widgets(self):
         """Creates and places all the widgets in the window."""
         # Main layout grid
@@ -235,37 +152,6 @@ class RpgGui(ttk.Frame):
         self.columnconfigure(2, weight=1, uniform="char_inv_group") # Inventory
         self.rowconfigure(0, weight=1) # Top area
         self.rowconfigure(1, weight=0) # Bottom area for the log
-
-        # --- UI Redesign: Configure styles for UI elements ---
-        style = ttk.Style()
-        # Set a base background color that complements the stone, for areas the leather doesn't cover.
-        style.configure('TFrame', background='#4a4a4a')
-
-        # Style for widgets on the leather background
-        leather_bg_color = '#6F4E37' # Coffee brown, as a fallback and for matching
-        leather_fg_color = '#F5DEB3' # Wheat color for text
-
-        style.configure('Leather.TLabel', background=leather_bg_color, foreground=leather_fg_color, font=('Verdana', 9))
-        style.configure('Leather.TLabelFrame', background=leather_bg_color)
-        style.configure('Leather.TLabelFrame.Label', background=leather_bg_color, foreground=leather_fg_color, font=('Verdana', 10, 'bold'))
-
-        # Style for Buttons on the leather background
-        style.configure('Leather.TButton', background='#5D4037', foreground=leather_fg_color, font=('Verdana', 9, 'bold'), borderwidth=1)
-        style.map('Leather.TButton',
-            background=[('active', '#795548'), ('disabled', '#4E342E')],
-            foreground=[('disabled', '#A1887F')])
-
-        # Style for the Notebook (Tabs)
-        style.configure('Leather.TNotebook', background=leather_bg_color, borderwidth=0)
-        style.configure('Leather.TNotebook.Tab',
-            background='#5D4037', # Darker brown for inactive tab
-            foreground=leather_fg_color,
-            padding=[8, 4],
-            font=('Verdana', 9, 'bold')
-        )
-        style.map('Leather.TNotebook.Tab',
-            background=[('selected', leather_bg_color)], # Active tab matches panel bg
-            expand=[('selected', [1, 1, 1, 0])])
 
         # Create main frames for each section
         char_frame_container = ttk.Frame(self)
@@ -288,10 +174,10 @@ class RpgGui(ttk.Frame):
         self._create_actions_frame(actions_frame)
 
         # Create and populate the notebook for equipment and inventory
-        notebook = ttk.Notebook(inventory_frame, style='Leather.TNotebook')
+        notebook = ttk.Notebook(inventory_frame)
         notebook.grid(row=0, column=0, sticky="nsew")
-        equipment_tab = ttk.Frame(notebook, style='Leather.TFrame')
-        inventory_tab = ttk.Frame(notebook, style='Leather.TFrame')
+        equipment_tab = ttk.Frame(notebook)
+        inventory_tab = ttk.Frame(notebook)
         notebook.add(equipment_tab, text='Ausrüstung')
         notebook.add(inventory_tab, text='Inventar')
 
@@ -300,55 +186,27 @@ class RpgGui(ttk.Frame):
 
         self._create_log_frame(log_frame)
 
-    def _apply_leather_background(self, widget):
-        """Applies the tiled leather background to a given widget."""
-        if not self.bg_leather_pil:
-            widget.configure(bg="#6F4E37") # Coffee brown fallback
-            return
-
-        canvas = tk.Canvas(widget)
-        canvas.place(x=0, y=0, relwidth=1, relheight=1)
-
-        def tile_background(event):
-            width = event.width
-            height = event.height
-            if width <= 1 or height <= 1: return
-
-            bg_image = Image.new('RGB', (width, height))
-            tile_w, tile_h = self.bg_leather_pil.size
-            for x in range(0, width, tile_w):
-                for y in range(0, height, tile_h):
-                    bg_image.paste(self.bg_leather_pil, (x, y))
-
-            # Store reference on the canvas itself to avoid garbage collection
-            canvas.bg_photo = ImageTk.PhotoImage(bg_image)
-            canvas.create_image(0, 0, image=canvas.bg_photo, anchor='nw')
-            canvas.lower()
-
-        widget.bind("<Configure>", tile_background)
-
     def _create_character_frame(self, parent):
-        char_frame = ttk.LabelFrame(parent, text="Charakterstatus", padding="10", style='Leather.TLabelFrame')
+        char_frame = ttk.LabelFrame(parent, text="Charakterstatus", padding="10")
         char_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 10), anchor='n')
-        self._apply_leather_background(char_frame) # Apply the leather background here
         char_frame.columnconfigure(2, weight=1) # Allow portrait column to expand
 
         # --- Left side: Stats ---
         labels = {"Name:": self.char_name_var, "Level:": self.char_level_var, "Item Level:": self.item_level_var, "Gold:": self.char_gold_var}
         for i, (text, var) in enumerate(labels.items()):
-            ttk.Label(char_frame, text=text, style='Leather.TLabel').grid(row=i, column=0, sticky="w")
-            ttk.Label(char_frame, textvariable=var, style='Leather.TLabel').grid(row=i, column=1, sticky="w")
+            ttk.Label(char_frame, text=text).grid(row=i, column=0, sticky="w")
+            ttk.Label(char_frame, textvariable=var).grid(row=i, column=1, sticky="w")
 
-        attr_frame = ttk.LabelFrame(char_frame, text="Attribute", padding="5", style='Leather.TLabelFrame')
+        attr_frame = ttk.LabelFrame(char_frame, text="Attribute", padding="5")
         attr_frame.grid(row=3, column=0, columnspan=2, sticky="ew", pady=(10, 0))
         for i, (stat, var) in enumerate(self.stats_vars.items()):
-            ttk.Label(attr_frame, text=f"{stat}:", style='Leather.TLabel').grid(row=i, column=0, sticky="w")
-            ttk.Label(attr_frame, textvariable=var, style='Leather.TLabel').grid(row=i, column=1, sticky="w", padx=5)
+            ttk.Label(attr_frame, text=f"{stat}:").grid(row=i, column=0, sticky="w")
+            ttk.Label(attr_frame, textvariable=var).grid(row=i, column=1, sticky="w", padx=5)
 
         # Resources Display
-        resources_frame = ttk.LabelFrame(char_frame, text="Ressourcen", padding="5", style='Leather.TLabelFrame')
+        resources_frame = ttk.LabelFrame(char_frame, text="Ressourcen", padding="5")
         resources_frame.grid(row=4, column=0, columnspan=2, sticky="ew", pady=(10, 0))
-        self.resources_label = ttk.Label(resources_frame, text="Noch keine Ressourcen gesammelt.", style='Leather.TLabel')
+        self.resources_label = ttk.Label(resources_frame, text="Noch keine Ressourcen gesammelt.")
         self.resources_label.pack(fill=tk.X, expand=True)
 
 
@@ -361,14 +219,14 @@ class RpgGui(ttk.Frame):
         ]
 
         for i, (text, var_name) in enumerate(progress_bars_data):
-            frame = ttk.LabelFrame(char_frame, text=text, padding=5, style='Leather.TLabelFrame')
+            frame = ttk.LabelFrame(char_frame, text=text, padding=5)
             # We will manage the grid position later
             setattr(self, f"{var_name}_frame", frame)
 
             bar = ttk.Progressbar(frame, orient='horizontal', mode='determinate')
             bar.pack(fill=tk.X, expand=True)
             label_var = getattr(self, f"{var_name}_label_var")
-            ttk.Label(frame, textvariable=label_var, anchor="center", style='Leather.TLabel').pack()
+            ttk.Label(frame, textvariable=label_var, anchor="center").pack()
             setattr(self, f"{var_name}_bar", bar)
 
         # --- Right side: Portrait ---
@@ -390,30 +248,27 @@ class RpgGui(ttk.Frame):
             self.portrait_label.config(text=f"Fehler beim\nLaden des Bildes:\n{e}")
 
     def _create_actions_frame(self, parent):
-        actions_frame = ttk.LabelFrame(parent, text="Aktionen", padding="10", style='Leather.TLabelFrame')
+        actions_frame = ttk.LabelFrame(parent, text="Aktionen", padding="10")
         actions_frame.pack(fill=tk.Y, expand=False, anchor='n')
-        self._apply_leather_background(actions_frame)
 
-        self.quest_button = ttk.Button(actions_frame, text="Neue Quest beginnen", command=self.start_quest, style='Leather.TButton')
+        self.quest_button = ttk.Button(actions_frame, text="Neue Quest beginnen", command=self.start_quest)
         self.quest_button.pack(fill=tk.X, pady=5)
-        self.auto_quest_button = ttk.Button(actions_frame, text="Auto-Quest starten", command=self.toggle_auto_quest, style='Leather.TButton')
+        self.auto_quest_button = ttk.Button(actions_frame, text="Auto-Quest starten", command=self.toggle_auto_quest)
         self.auto_quest_button.pack(fill=tk.X, pady=5)
-        self.trader_button = ttk.Button(actions_frame, text="Händler besuchen", command=self.open_trader_window, style='Leather.TButton')
+        self.trader_button = ttk.Button(actions_frame, text="Händler besuchen", command=self.open_trader_window)
         self.trader_button.pack(fill=tk.X, pady=5)
-        self.blacksmith_button = ttk.Button(actions_frame, text="Schmied besuchen", command=self.open_blacksmith_window, style='Leather.TButton')
+        self.blacksmith_button = ttk.Button(actions_frame, text="Schmied besuchen", command=self.open_blacksmith_window)
         self.blacksmith_button.pack(fill=tk.X, pady=5)
-        self.boss_arena_button = ttk.Button(actions_frame, text="Boss Arena", command=self.open_boss_arena_window, style='Leather.TButton')
+        self.boss_arena_button = ttk.Button(actions_frame, text="Boss Arena", command=self.open_boss_arena_window)
         self.boss_arena_button.pack(fill=tk.X, pady=5)
-        self.equip_button = ttk.Button(actions_frame, text="Gegenstand ausrüsten", command=self.equip_item, style='Leather.TButton')
+        self.equip_button = ttk.Button(actions_frame, text="Gegenstand ausrüsten", command=self.equip_item)
         self.equip_button.pack(fill=tk.X, pady=5)
-        self.use_button = ttk.Button(actions_frame, text="Gegenstand benutzen", command=self.use_item, style='Leather.TButton')
+        self.use_button = ttk.Button(actions_frame, text="Gegenstand benutzen", command=self.use_item)
         self.use_button.pack(fill=tk.X, pady=5)
         self.progress_bar = ttk.Progressbar(actions_frame, orient='horizontal', mode='determinate', length=120)
         self.progress_bar.pack(fill=tk.X, pady=(10, 5))
 
-        leather_bg_color = '#6F4E37' # Coffee brown
-        leather_fg_color = '#F5DEB3' # Wheat color
-        self.loot_status_text = tk.Text(actions_frame, height=2, wrap=tk.WORD, bg=leather_bg_color, relief="flat", fg=leather_fg_color, font=('Verdana', 8))
+        self.loot_status_text = tk.Text(actions_frame, height=2, wrap=tk.WORD, bg="lightgrey", relief="flat", fg="gray")
         self.loot_status_text.pack(fill=tk.X, pady=5)
         self.loot_status_text.config(state=tk.DISABLED)
 
@@ -425,10 +280,10 @@ class RpgGui(ttk.Frame):
 
 
         # Minigame Canvas
-        minigame_frame = ttk.LabelFrame(actions_frame, text="Ressourcenjagd", padding="5", style='Leather.TLabelFrame')
+        minigame_frame = ttk.LabelFrame(actions_frame, text="Ressourcenjagd", padding="5")
         minigame_frame.pack(fill=tk.X, pady=(10, 0), expand=True)
 
-        self.minigame_toggle_button = ttk.Button(minigame_frame, text="Ressourcenjagd starten", command=self.toggle_minigame, style='Leather.TButton')
+        self.minigame_toggle_button = ttk.Button(minigame_frame, text="Ressourcenjagd starten", command=self.toggle_minigame)
         self.minigame_toggle_button.pack(fill=tk.X, pady=(0, 5))
 
         self.minigame_canvas = tk.Canvas(minigame_frame, width=240, height=300, relief="sunken", borderwidth=1)
@@ -446,16 +301,13 @@ class RpgGui(ttk.Frame):
 
     def _create_log_frame(self, parent):
         """Creates the quest log text widget."""
-        log_labelframe = ttk.LabelFrame(parent, text="Log", padding="10", style='Leather.TLabelFrame')
+        log_labelframe = ttk.LabelFrame(parent, text="Log", padding="10")
         log_labelframe.pack(fill=tk.X, expand=True)
-        self._apply_leather_background(log_labelframe)
 
         log_labelframe.rowconfigure(0, weight=1)
         log_labelframe.columnconfigure(0, weight=1)
 
-        leather_bg_color = '#6F4E37' # Coffee brown
-        leather_fg_color = '#F5DEB3' # Wheat color
-        self.quest_log = tk.Text(log_labelframe, height=10, wrap=tk.WORD, bg=leather_bg_color, fg=leather_fg_color, relief="flat", font=('Verdana', 9))
+        self.quest_log = tk.Text(log_labelframe, height=10, wrap=tk.WORD, bg="#2B2B2B", fg="white", relief="flat")
         self.quest_log.grid(row=0, column=0, sticky="nsew")
         scrollbar = ttk.Scrollbar(log_labelframe, orient=tk.VERTICAL, command=self.quest_log.yview)
         self.quest_log.config(yscrollcommand=scrollbar.set)
@@ -474,19 +326,17 @@ class RpgGui(ttk.Frame):
 
     def _create_equipment_frame(self, parent):
         parent.columnconfigure(1, weight=1)
-        equip_frame = ttk.LabelFrame(parent, text="Angelegte Ausrüstung", padding="10", style='Leather.TLabelFrame')
+        equip_frame = ttk.LabelFrame(parent, text="Angelegte Ausrüstung", padding="10")
         equip_frame.pack(fill=tk.X, padx=10, pady=10)
-        self._apply_leather_background(equip_frame)
         for i, (slot, var) in enumerate(self.equipment_vars.items()):
-            ttk.Label(equip_frame, text=f"{slot}:", style='Leather.TLabel').grid(row=i, column=0, sticky="w")
-            ttk.Label(equip_frame, textvariable=var, style='Leather.TLabel').grid(row=i, column=1, sticky="w", padx=5)
+            ttk.Label(equip_frame, text=f"{slot}:").grid(row=i, column=0, sticky="w")
+            ttk.Label(equip_frame, textvariable=var).grid(row=i, column=1, sticky="w", padx=5)
 
     def _create_inventory_frame(self, parent):
         parent.rowconfigure(0, weight=1)
         parent.columnconfigure(0, weight=1)
-        self.inv_frame = ttk.LabelFrame(parent, text="Rucksack", padding="10", style='Leather.TLabelFrame')
+        self.inv_frame = ttk.LabelFrame(parent, text="Rucksack", padding="10")
         self.inv_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-        self._apply_leather_background(self.inv_frame)
         self.inv_frame.rowconfigure(0, weight=1)
         self.inv_frame.columnconfigure(0, weight=1)
         self.inventory_listbox = tk.Listbox(self.inv_frame, bg="#2B2B2B", fg="white", selectbackground="#0078D7")
