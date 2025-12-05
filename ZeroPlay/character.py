@@ -47,6 +47,10 @@ class Character:
         self.current_energie = 0
         self.max_wut = 0
         self.current_wut = 0
+        self.run_counter = 0           # Neu: Zählt die Runs/Resets
+        self.permanent_bonus = 0.0     # Neu: Prozentualer Bonus auf Basiswerte
+        self.apply_permanent_bonus()   # Basiswerte direkt mit Bonus starten
+
         self.update_derived_stats(heal_on_update=True) # Initial calculation and full heal
 
     def get_allowed_armor_types(self):
@@ -189,10 +193,8 @@ class Character:
         self.add_resource("Juwel", 100)
 
     def remove_resources(self, cost):
-        """
-        Removes resources from the character's inventory based on a cost dictionary.
-        Assumes the check for affordability has already been made.
-        """
+        """Removes resources from the character's inventory based on a cost dictionary.
+        Assumes the check for affordability has already been made."""
         for resource, amount in cost.items():
             if resource in self.resources:
                 self.resources[resource] -= amount
@@ -200,8 +202,7 @@ class Character:
                     del self.resources[resource]
 
     def is_upgrade(self, item_from_inventory):
-        """
-        Checks if an item in the inventory is an upgrade over the equipped item.
+        """Checks if an item in the inventory is an upgrade over the equipped item.
 
         Args:
             item_from_inventory (Item): The item to check.
@@ -232,8 +233,7 @@ class Character:
         return new_item_score > equipped_item_score
 
     def equip(self, item_index):
-        """
-        Equips an item from the inventory.
+        """Equips an item from the inventory.
 
         Args:
             item_index (int): The index of the item in the inventory.
@@ -259,8 +259,7 @@ class Character:
                 self.update_derived_stats()
 
     def get_total_stats(self):
-        """
-        Calculates total stats including bonuses from equipped items.
+        """Calculates total stats including bonuses from equipped items.
 
         Returns:
             dict: A dictionary with the total stats.
@@ -287,10 +286,8 @@ class Character:
         return total_score // equipped_items
 
     def get_base_item_level(self):
-        """
-        Calculates the average item score of equipped gear based on BASE stats,
-        ignoring blacksmith upgrades.
-        """
+        """Calculates the average item score of equipped gear based on BASE stats,
+        ignoring blacksmith upgrades."""
         total_score = 0
         equipped_items = 0
         for item in self.equipment.values():
@@ -332,3 +329,21 @@ class Character:
         else:
             print("  - Leer")
         print("-----------------------\n")
+
+    def reset_character_on_death(self):
+        """Setzt den Charakter nach Tod zurück und gibt permanenten Bonus."""
+        self.level = 1
+        self.xp = 0
+        self.xp_to_next_level = 100
+        self.inventory = []
+        self.equipment = {'Kopf': None, 'Brust': None, 'Waffe': None}
+        self.run_counter += 1
+        self.permanent_bonus += 0.05   # +5% Basiswerte je Reset
+        self.apply_permanent_bonus()
+        self.update_derived_stats(heal_on_update=True)
+
+    def apply_permanent_bonus(self):
+        """Erhöht die Basiswerte um permanent_bonus Prozent."""
+        for stat_name in self.attributes:
+            base = CLASSES[self.klasse]["attributes"].get(stat_name, 5)
+            self.attributes[stat_name] = int(base * (1.0 + self.permanent_bonus))
