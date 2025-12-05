@@ -5,7 +5,7 @@ Defines the GUI Frame for the main start menu.
 import tkinter as tk
 from tkinter import ttk
 from save_load_system import get_save_files
-from utils import format_currency, apply_tiled_background
+from utils import format_currency
 
 from save_load_system import get_save_files, load_game
 
@@ -17,9 +17,6 @@ class StartMenu(ttk.Frame):
         self.callbacks = callbacks # e.g., {'load': on_load, 'new': on_new, 'quit': on_quit}
 
         self.selected_save = None
-
-        # Apply the stone background to the entire frame
-        apply_tiled_background(self, "assets/stone_background.png")
 
         self._setup_vars()
         self.create_widgets()

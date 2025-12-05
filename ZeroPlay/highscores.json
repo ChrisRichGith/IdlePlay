@@ -4,6 +4,9 @@
         "klasse": "Krieger",
         "level": 18,
         "copper": 232546,
+        "bosses_defeated": 0,
+        "resources": {},
+        "cheat_activated": false,
         "best_weapon": "Selten Schwert",
         "best_head": "Selten Helm",
         "best_chest": "Ungewöhnlich Plattenpanzer"

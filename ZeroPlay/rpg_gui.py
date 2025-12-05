@@ -17,7 +17,7 @@ from blacksmith_gui import BlacksmithWindow
 from boss_arena_gui import BossArenaWindow
 from save_load_system import save_game
 from highscore_manager import save_highscore
-from utils import format_currency, center_window, apply_tiled_background
+from utils import format_currency, center_window
 from game_over_gui import GameOverWindow
 from game_data import BOSS_TIERS
 
@@ -105,15 +105,12 @@ class RpgGui(ttk.Frame):
 
         # Cheat code tracking
         self.typed_string = ""
+        self.cheat_buffer = ""
+        self.cheat_code = "ordilogicus"
         self.master.bind("<Key>", self.handle_keypress)
+        self.master.bind("<Key>", self._handle_keypress, add="+")
 
-        self._setup_styles()
         self._setup_string_vars()
-        self._setup_styles() # Call style setup before creating widgets
-
-        # Apply the stone background to the entire frame
-        apply_tiled_background(self, "assets/stone_background.png")
-
         self.create_widgets()
         self.update_display()
 
@@ -143,11 +140,6 @@ class RpgGui(ttk.Frame):
         self.energie_label_var = tk.StringVar()
         self.wut_label_var = tk.StringVar()
 
-    def _setup_styles(self):
-        """Configures all the ttk styles for the UI redesign."""
-        # Get the style object from the root window, do not create a new one.
-        self.style = self.master.style
-
     def create_widgets(self):
         """Creates and places all the widgets in the window."""
         # Main layout grid
@@ -173,14 +165,6 @@ class RpgGui(ttk.Frame):
         log_frame = ttk.Frame(self)
         log_frame.grid(row=1, column=0, columnspan=3, sticky="nsew", padx=10, pady=(0, 10))
 
-        # Apply the themed background to the main frames
-        apply_tiled_background(self, "assets/leather_background.png")
-        apply_tiled_background(char_frame_container, "assets/leather_background.png")
-        apply_tiled_background(actions_frame, "assets/leather_background.png")
-        apply_tiled_background(inventory_frame, "assets/leather_background.png")
-        apply_tiled_background(log_frame, "assets/leather_background.png")
-
-
         # Populate the frames
         self._create_character_frame(char_frame_container)
         self._create_actions_frame(actions_frame)
@@ -201,28 +185,43 @@ class RpgGui(ttk.Frame):
     def _create_character_frame(self, parent):
         char_frame = ttk.LabelFrame(parent, text="Charakterstatus", padding="10")
         char_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 10), anchor='n')
-        apply_tiled_background(char_frame, "assets/leather_background.png") # Apply the leather background here
         char_frame.columnconfigure(2, weight=1) # Allow portrait column to expand
 
         # --- Left side: Stats ---
-        labels = {"Name:": self.char_name_var, "Level:": self.char_level_var, "Item Level:": self.item_level_var, "Gold:": self.char_gold_var}
-        for i, (text, var) in enumerate(labels.items()):
-            ttk.Label(char_frame, text=text).grid(row=i, column=0, sticky="w")
-            ttk.Label(char_frame, textvariable=var).grid(row=i, column=1, sticky="w")
+        # Keep track of the current row index
+        current_row = 0
 
+        # Basic Info
+        labels_data = [
+            ("Name:", self.char_name_var),
+            ("Level:", self.char_level_var),
+            ("Item Level:", self.item_level_var),
+            ("Gold:", self.char_gold_var)
+        ]
+        for text, var in labels_data:
+            ttk.Label(char_frame, text=text).grid(row=current_row, column=0, sticky="w")
+            ttk.Label(char_frame, textvariable=var).grid(row=current_row, column=1, sticky="w")
+            current_row += 1
+
+        # Attributes
         attr_frame = ttk.LabelFrame(char_frame, text="Attribute", padding="5")
-        attr_frame.grid(row=3, column=0, columnspan=2, sticky="ew", pady=(10, 0))
-        for i, (stat, var) in enumerate(self.stats_vars.items()):
+        attr_frame.grid(row=current_row, column=0, columnspan=2, sticky="ew", pady=(10, 0))
+        stat_order = ['Stärke', 'Intelligenz', 'Glück']
+        for i, stat in enumerate(stat_order):
+            var = self.stats_vars[stat]
             ttk.Label(attr_frame, text=f"{stat}:").grid(row=i, column=0, sticky="w")
             ttk.Label(attr_frame, textvariable=var).grid(row=i, column=1, sticky="w", padx=5)
+        current_row += 1
 
-        # Resources Display
+        # Resources
         resources_frame = ttk.LabelFrame(char_frame, text="Ressourcen", padding="5")
-        resources_frame.grid(row=4, column=0, columnspan=2, sticky="ew", pady=(10, 0))
+        resources_frame.grid(row=current_row, column=0, columnspan=2, sticky="ew", pady=(10, 0))
         self.resources_label = ttk.Label(resources_frame, text="Noch keine Ressourcen gesammelt.")
         self.resources_label.pack(fill=tk.X, expand=True)
+        current_row += 1
 
-
+        # Progress Bars (LP, MP, etc.)
+        self.progress_bar_row_start = current_row
         progress_bars_data = [
             ("Lebenspunkte", "lp"),
             ("Manapunkte", "mp"),
@@ -230,10 +229,8 @@ class RpgGui(ttk.Frame):
             ("Wut", "wut"),
             ("Erfahrung", "xp")
         ]
-
-        for i, (text, var_name) in enumerate(progress_bars_data):
+        for text, var_name in progress_bars_data:
             frame = ttk.LabelFrame(char_frame, text=text, padding=5)
-            # We will manage the grid position later
             setattr(self, f"{var_name}_frame", frame)
 
             bar = ttk.Progressbar(frame, orient='horizontal', mode='determinate')
@@ -244,7 +241,7 @@ class RpgGui(ttk.Frame):
 
         # --- Right side: Portrait ---
         self.portrait_label = ttk.Label(char_frame)
-        self.portrait_label.grid(row=0, column=2, rowspan=7, sticky="nsew", padx=(20, 0))
+        self.portrait_label.grid(row=0, column=2, rowspan=15, sticky="nsew", padx=(20, 0)) # Use a large rowspan
 
         try:
             if self.player.image_path:
@@ -253,7 +250,6 @@ class RpgGui(ttk.Frame):
                 photo_img = ImageTk.PhotoImage(img)
 
                 self.portrait_label.config(image=photo_img)
-                # Keep a reference to the image to prevent it from being garbage collected
                 self.portrait_label.image = photo_img
         except FileNotFoundError:
             self.portrait_label.config(text=f"Bild nicht\ngefunden:\n{self.player.image_path}")
@@ -263,7 +259,6 @@ class RpgGui(ttk.Frame):
     def _create_actions_frame(self, parent):
         actions_frame = ttk.LabelFrame(parent, text="Aktionen", padding="10")
         actions_frame.pack(fill=tk.Y, expand=False, anchor='n')
-        apply_tiled_background(actions_frame, "assets/leather_background.png")
 
         self.quest_button = ttk.Button(actions_frame, text="Neue Quest beginnen", command=self.start_quest)
         self.quest_button.pack(fill=tk.X, pady=5)
@@ -317,7 +312,6 @@ class RpgGui(ttk.Frame):
         """Creates the quest log text widget."""
         log_labelframe = ttk.LabelFrame(parent, text="Log", padding="10")
         log_labelframe.pack(fill=tk.X, expand=True)
-        apply_tiled_background(log_labelframe, "assets/leather_background.png")
 
         log_labelframe.rowconfigure(0, weight=1)
         log_labelframe.columnconfigure(0, weight=1)
@@ -343,7 +337,6 @@ class RpgGui(ttk.Frame):
         parent.columnconfigure(1, weight=1)
         equip_frame = ttk.LabelFrame(parent, text="Angelegte Ausrüstung", padding="10")
         equip_frame.pack(fill=tk.X, padx=10, pady=10)
-        apply_tiled_background(equip_frame, "assets/leather_background.png")
         for i, (slot, var) in enumerate(self.equipment_vars.items()):
             ttk.Label(equip_frame, text=f"{slot}:").grid(row=i, column=0, sticky="w")
             ttk.Label(equip_frame, textvariable=var).grid(row=i, column=1, sticky="w", padx=5)
@@ -353,10 +346,9 @@ class RpgGui(ttk.Frame):
         parent.columnconfigure(0, weight=1)
         self.inv_frame = ttk.LabelFrame(parent, text="Rucksack", padding="10")
         self.inv_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-        apply_tiled_background(self.inv_frame, "assets/leather_background.png")
         self.inv_frame.rowconfigure(0, weight=1)
         self.inv_frame.columnconfigure(0, weight=1)
-        self.inventory_listbox = tk.Listbox(self.inv_frame, bg="#2B2B2B", fg="#FFFDE7", selectbackground="#5D4037", selectforeground="#FFFFFF", relief="flat", borderwidth=0)
+        self.inventory_listbox = tk.Listbox(self.inv_frame, bg="#2B2B2B", fg="white", selectbackground="#0078D7")
         self.inventory_listbox.grid(row=0, column=0, sticky="nsew")
         scrollbar = ttk.Scrollbar(self.inv_frame, orient=tk.VERTICAL, command=self.inventory_listbox.yview)
         self.inventory_listbox.config(yscrollcommand=scrollbar.set)
@@ -419,20 +411,27 @@ class RpgGui(ttk.Frame):
         self.energie_frame.grid_remove()
         self.wut_frame.grid_remove()
 
+        current_row = self.progress_bar_row_start
+        # Place the static LP bar
+        self.lp_frame.grid(row=current_row, column=0, columnspan=2, sticky="ew", pady=(5, 0))
+        current_row += 1
+
         if self.player.klasse == "Schurke":
             self.energie_label_var.set(f"{self.player.current_energie} / {self.player.max_energie} Energie")
             self.energie_bar['value'] = (self.player.current_energie / self.player.max_energie) * 100 if self.player.max_energie > 0 else 0
-            self.energie_frame.grid(row=6, column=0, columnspan=2, sticky="ew", pady=(5, 0))
+            self.energie_frame.grid(row=current_row, column=0, columnspan=2, sticky="ew", pady=(5, 0))
+            current_row += 1
         elif self.player.klasse == "Krieger":
             self.wut_label_var.set(f"{self.player.current_wut} / {self.player.max_wut} Wut")
             self.wut_bar['value'] = (self.player.current_wut / self.player.max_wut) * 100 if self.player.max_wut > 0 else 0
-            self.wut_frame.grid(row=6, column=0, columnspan=2, sticky="ew", pady=(5, 0))
+            self.wut_frame.grid(row=current_row, column=0, columnspan=2, sticky="ew", pady=(5, 0))
+            current_row += 1
         else: # Default to Mana for Magier and any other future classes
-            self.mp_frame.grid(row=6, column=0, columnspan=2, sticky="ew", pady=(5, 0))
+            self.mp_frame.grid(row=current_row, column=0, columnspan=2, sticky="ew", pady=(5, 0))
+            current_row += 1
 
-        # Place the static bars
-        self.lp_frame.grid(row=5, column=0, columnspan=2, sticky="ew", pady=(5, 0))
-        self.xp_frame.grid(row=7, column=0, columnspan=2, sticky="ew", pady=(5, 0))
+        # Place the static XP bar
+        self.xp_frame.grid(row=current_row, column=0, columnspan=2, sticky="ew", pady=(5, 0))
 
 
         # Update resources display

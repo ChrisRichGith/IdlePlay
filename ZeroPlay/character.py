@@ -33,10 +33,10 @@ class Character:
         self.equipment = {'Kopf': None, 'Brust': None, 'Waffe': None}
         self.resources = {}
         self.boss_tier = 0
+        self.bosses_defeated = 0
         self.autosell_unlocked_notified = False
         self.cheat_activated = False # Flag for highscore
-        self.is_immortal = False    # God mode flag
-        self.bosses_defeated = 0
+        self.is_immortal = False
 
         # Derived stats
         self.max_lp = 0
@@ -143,10 +143,9 @@ class Character:
         return True, f"{item.name} benutzt."
 
     def take_damage(self, damage):
-        """Reduces the character's HP by a given amount, unless immortal."""
+        """Reduces the character's HP by a given amount."""
         if self.is_immortal:
-            return  # Don't take any damage
-
+            return  # Don't take any damage if immortal
         self.current_lp -= damage
         if self.current_lp < 0:
             self.current_lp = 0
@@ -226,10 +225,9 @@ class Character:
             # Any item is an upgrade if the slot is empty, provided it has a positive score
             return item_from_inventory.get_weighted_score(main_stat) > 0
 
-        # For auto-selling, compare the new item's base score to the equipped item's base score.
-        # This prevents selling items that *could* be better if upgraded.
-        new_item_score = item_from_inventory.get_base_weighted_score(main_stat)
-        equipped_item_score = equipped_item.get_base_weighted_score(main_stat)
+        # Compare the weighted scores
+        new_item_score = item_from_inventory.get_weighted_score(main_stat)
+        equipped_item_score = equipped_item.get_weighted_score(main_stat)
 
         return new_item_score > equipped_item_score
 

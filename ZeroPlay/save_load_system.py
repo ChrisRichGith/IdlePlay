@@ -15,11 +15,8 @@ def save_game(character):
     Args:
         character (Character): The character object to save.
     """
-    try:
-        os.makedirs(SAVE_DIR, exist_ok=True)
-    except OSError as e:
-        print(f"Fehler beim Erstellen des Speicherverzeichnisses: {e}")
-        return # Abort saving if directory creation fails
+    if not os.path.exists(SAVE_DIR):
+        os.makedirs(SAVE_DIR)
 
     filename = os.path.join(SAVE_DIR, f"{character.name}.sav")
     try:
@@ -45,10 +42,15 @@ def load_game(character_name):
             with open(filename, 'rb') as f:
                 character = pickle.load(f)
                 # Compatibility check for old saves
+                # Compatibility check for old saves
                 if not hasattr(character, 'resources'):
                     character.resources = {}
                 if not hasattr(character, 'main_stat'):
                     character.main_stat = CLASSES.get(character.klasse, {}).get("main_stat")
+                if not hasattr(character, 'is_immortal'):
+                    character.is_immortal = False
+                if not hasattr(character, 'bosses_defeated'):
+                    character.bosses_defeated = 0
                 return character
         except Exception as e:
             print(f"Fehler beim Laden von {character_name}: {e}")
