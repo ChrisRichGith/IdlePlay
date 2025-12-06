@@ -1,0 +1,29 @@
+[
+    {
+        "name": "Clavayn",
+        "klasse": "Krieger",
+        "level": 18,
+        "copper": 232546,
+        "bosses_defeated": 0,
+        "resources": {},
+        "cheat_activated": false,
+        "best_weapon": "Selten Schwert",
+        "best_head": "Selten Helm",
+        "best_chest": "Ungewöhnlich Plattenpanzer"
+    },
+    {
+        "name": "Chris",
+        "klasse": "Krieger",
+        "level": 17,
+        "copper": 99910,
+        "bosses_defeated": 0,
+        "resources": {
+            "Eisenerz": 12,
+            "Juwel": 100
+        },
+        "cheat_activated": true,
+        "best_weapon": "Ungewöhnlich Schwert +3",
+        "best_head": "Selten Kettenhaube +3",
+        "best_chest": "Ungewöhnlich Plattenpanzer +3"
+    }
+]
