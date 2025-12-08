@@ -13,73 +13,33 @@ from quest import Quest
 from trader import Trader
 from trader_gui import TraderWindow
 from blacksmith_gui import BlacksmithWindow
+from boss_arena_gui import BossArenaWindow
 from save_load_system import save_game
 from utils import format_currency, center_window
 from game_over_gui import GameOverWindow
+from localization import get_text
 
-# Liste verfügbarer Quests
+# Quest names are now keys for localization
 AVAILABLE_QUESTS = [
-    {
-        "name": "Töte alle Schleime",
-        "image": "assets/quests/kill_all_slimes.jpg"
-    },
-    {
-        "name": "Bringe dem Schmied 5 Eisenerz",
-        "image": "assets/quests/bring_5_iron_ore_to_the_blacksmith.jpg"
-    },
-    {
-        "name": "Rette eine Prinzessin aus einem anderen Schloss",
-        "image": "assets/quests/save_a_princess_from_another_castle.jpg"
-    },
-    {
-        "name": "Sammle 10 leere Flaschen für den Alchemisten",
-        "image": "assets/quests/collect_10_empty_bottles_for_the_alchemist.jpg"
-    },
-    {
-        "name": "Poliere die Rüstung des Königs (ohne Bezahlung)",
-        "image": "assets/quests/polish_the_king's_armor_(unpaid).jpg"
-    },
-    {
-        "name": "Entwirre die Kopfhörer des Barden",
-        "image": "assets/quests/untangle_the_bard's_headphones.jpg"
-    },
-    {
-        "name": "Finde das Rezept für ewige Jugend (und verliere es wieder)",
-        "image": "assets/quests/find_the_recipe_for_eternal_youth_(and_lose_it_again).jpg"
-    },
-    {
-        "name": "Bringe dem königlichen Papagei das Fluchen bei",
-        "image": "assets/quests/teach_the_royal_parrot_to_curse.jpg"
-    },
-    {
-        "name": "Zähle alle Sandkörner am Strand",
-        "image": "assets/quests/count_all_the_grains_of_sand_on_the_beach.jpg"
-    },
-    {
-        "name": "Sortiere die Bibliothek nach der Farbe der Buchrücken",
-        "image": "assets/quests/sort_the_library_by_the_color_of_the_book_spines.jpg"
-    },
-    {
-        "name": "Überzeuge einen Drachen, dass er nur ein überdimensionierter Wellensittich ist",
-        "image": "assets/quests/convince_a_dragon_he's_just_an_oversized_budgie.jpg"
-    },
-    {
-        "name": "Finde heraus, warum Goblins immer so schlechte Laune haben",
-        "image": "assets/quests/find_out_why_goblins_are_always_in_a_bad_mood.jpg"
-    },
-    {
-        "name": "Eskortiere eine sehr langsame Schildkröte über eine sehr breite Straße",
-        "image": "assets/quests/escort_a_very_slow_turtle_across_a_very_wide_road.jpg"
-    },
-    {
-        "name": "Störe eine wichtige Zeremonie durch lautes Kauen",
-        "image": "assets/quests/disrupt_an_important_ceremony_by_chewing_loudly.jpg"
-    }
+    {"name_key": "quest_kill_slimes", "image": "assets/quests/kill_all_slimes.jpg"},
+    {"name_key": "quest_bring_ore", "image": "assets/quests/bring_5_iron_ore_to_the_blacksmith.jpg"},
+    {"name_key": "quest_save_princess", "image": "assets/quests/save_a_princess_from_another_castle.jpg"},
+    {"name_key": "quest_collect_bottles", "image": "assets/quests/collect_10_empty_bottles_for_the_alchemist.jpg"},
+    {"name_key": "quest_polish_armor", "image": "assets/quests/polish_the_king's_armor_(unpaid).jpg"},
+    {"name_key": "quest_untangle_headphones", "image": "assets/quests/untangle_the_bard's_headphones.jpg"},
+    {"name_key": "quest_find_recipe", "image": "assets/quests/find_the_recipe_for_eternal_youth_(and_lose_it_again).jpg"},
+    {"name_key": "quest_teach_parrot", "image": "assets/quests/teach_the_royal_parrot_to_curse.jpg"},
+    {"name_key": "quest_count_sand", "image": "assets/quests/count_all_the_grains_of_sand_on_the_beach.jpg"},
+    {"name_key": "quest_sort_library", "image": "assets/quests/sort_the_library_by_the_color_of_the_book_spines.jpg"},
+    {"name_key": "quest_convince_dragon", "image": "assets/quests/convince_a_dragon_he's_just_an_oversized_budgie.jpg"},
+    {"name_key": "quest_find_goblin_mood", "image": "assets/quests/find_out_why_goblins_are_always_in_a_bad_mood.jpg"},
+    {"name_key": "quest_escort_turtle", "image": "assets/quests/escort_a_very_slow_turtle_across_a_very_wide_road.jpg"},
+    {"name_key": "quest_disrupt_ceremony", "image": "assets/quests/disrupt_an_important_ceremony_by_chewing_loudly.jpg"}
 ]
 
 class RpgGui(ttk.Frame):
-    """Manages the main game GUI frame."""
-
+    # ... (rest of the file is the same as the fully translated version)
+    # ... I will now paste the rest of the translated file here
     def __init__(self, parent, character, callbacks):
         """Initializes the GUI with a character object."""
         super().__init__(parent)
@@ -148,8 +108,8 @@ class RpgGui(ttk.Frame):
         notebook.grid(row=0, column=0, sticky="nsew")
         equipment_tab = ttk.Frame(notebook)
         inventory_tab = ttk.Frame(notebook)
-        notebook.add(equipment_tab, text='Ausrüstung')
-        notebook.add(inventory_tab, text='Inventar')
+        notebook.add(equipment_tab, text=get_text('equipment_tab'))
+        notebook.add(inventory_tab, text=get_text('inventory_tab'))
 
         self._create_equipment_frame(equipment_tab)
         self._create_inventory_frame(inventory_tab)
@@ -157,35 +117,35 @@ class RpgGui(ttk.Frame):
         self._create_log_frame(log_frame)
 
     def _create_character_frame(self, parent):
-        char_frame = ttk.LabelFrame(parent, text="Charakterstatus", padding="10")
+        char_frame = ttk.LabelFrame(parent, text=get_text('character_status'), padding="10")
         char_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 10), anchor='n')
         char_frame.columnconfigure(2, weight=1) # Allow portrait column to expand
 
         # --- Left side: Stats ---
-        labels = {"Name:": self.char_name_var, "Level:": self.char_level_var, "Gold:": self.char_gold_var}
+        labels = {get_text('name_label'): self.char_name_var, get_text('level_label'): self.char_level_var, get_text('gold_label'): self.char_gold_var}
         for i, (text, var) in enumerate(labels.items()):
             ttk.Label(char_frame, text=text).grid(row=i, column=0, sticky="w")
             ttk.Label(char_frame, textvariable=var).grid(row=i, column=1, sticky="w")
 
-        attr_frame = ttk.LabelFrame(char_frame, text="Attribute", padding="5")
+        attr_frame = ttk.LabelFrame(char_frame, text=get_text('attributes'), padding="5")
         attr_frame.grid(row=3, column=0, columnspan=2, sticky="ew", pady=(10, 0))
-        for i, (stat, var) in enumerate(self.stats_vars.items()):
-            ttk.Label(attr_frame, text=f"{stat}:").grid(row=i, column=0, sticky="w")
+        for i, (stat_key, var) in enumerate(self.stats_vars.items()):
+            ttk.Label(attr_frame, text=f"{get_text(stat_key.lower())}:").grid(row=i, column=0, sticky="w")
             ttk.Label(attr_frame, textvariable=var).grid(row=i, column=1, sticky="w", padx=5)
 
         # Resources Display
-        resources_frame = ttk.LabelFrame(char_frame, text="Ressourcen", padding="5")
+        resources_frame = ttk.LabelFrame(char_frame, text=get_text('resources'), padding="5")
         resources_frame.grid(row=4, column=0, columnspan=2, sticky="ew", pady=(10, 0))
-        self.resources_label = ttk.Label(resources_frame, text="Noch keine Ressourcen gesammelt.")
+        self.resources_label = ttk.Label(resources_frame, text=get_text('no_resources_collected'))
         self.resources_label.pack(fill=tk.X, expand=True)
 
 
         progress_bars_data = [
-            ("Lebenspunkte", "lp"),
-            ("Manapunkte", "mp"),
-            ("Energie", "energie"),
-            ("Wut", "wut"),
-            ("Erfahrung", "xp")
+            (get_text('health_points'), "lp"),
+            (get_text('mana_points'), "mp"),
+            (get_text('energy'), "energie"),
+            (get_text('rage'), "wut"),
+            (get_text('experience'), "xp")
         ]
 
         for i, (text, var_name) in enumerate(progress_bars_data):
@@ -213,25 +173,27 @@ class RpgGui(ttk.Frame):
                 # Keep a reference to the image to prevent it from being garbage collected
                 self.portrait_label.image = photo_img
         except FileNotFoundError:
-            self.portrait_label.config(text=f"Bild nicht\ngefunden:\n{self.player.image_path}")
+            self.portrait_label.config(text=get_text('image_not_found').format(path=self.player.image_path))
         except Exception as e:
-            self.portrait_label.config(text=f"Fehler beim\nLaden des Bildes:\n{e}")
+            self.portrait_label.config(text=get_text('error_loading_image').format(e=e))
 
     def _create_actions_frame(self, parent):
-        actions_frame = ttk.LabelFrame(parent, text="Aktionen", padding="10")
+        actions_frame = ttk.LabelFrame(parent, text=get_text('actions'), padding="10")
         actions_frame.pack(fill=tk.Y, expand=False, anchor='n')
 
-        self.quest_button = ttk.Button(actions_frame, text="Neue Quest beginnen", command=self.start_quest)
+        self.quest_button = ttk.Button(actions_frame, text=get_text('start_new_quest'), command=self.start_quest)
         self.quest_button.pack(fill=tk.X, pady=5)
-        self.auto_quest_button = ttk.Button(actions_frame, text="Auto-Quest starten", command=self.toggle_auto_quest)
+        self.auto_quest_button = ttk.Button(actions_frame, text=get_text('start_auto_quest'), command=self.toggle_auto_quest)
         self.auto_quest_button.pack(fill=tk.X, pady=5)
-        self.trader_button = ttk.Button(actions_frame, text="Händler besuchen", command=self.open_trader_window)
+        self.trader_button = ttk.Button(actions_frame, text=get_text('visit_trader'), command=self.open_trader_window)
         self.trader_button.pack(fill=tk.X, pady=5)
-        self.blacksmith_button = ttk.Button(actions_frame, text="Schmied besuchen", command=self.open_blacksmith_window)
+        self.blacksmith_button = ttk.Button(actions_frame, text=get_text('visit_blacksmith'), command=self.open_blacksmith_window)
         self.blacksmith_button.pack(fill=tk.X, pady=5)
-        self.equip_button = ttk.Button(actions_frame, text="Gegenstand ausrüsten", command=self.equip_item)
+        self.boss_arena_button = ttk.Button(actions_frame, text=get_text('visit_boss_arena'), command=self.open_boss_arena_window)
+        self.boss_arena_button.pack(fill=tk.X, pady=5)
+        self.equip_button = ttk.Button(actions_frame, text=get_text('equip_item'), command=self.equip_item)
         self.equip_button.pack(fill=tk.X, pady=5)
-        self.use_button = ttk.Button(actions_frame, text="Gegenstand benutzen", command=self.use_item)
+        self.use_button = ttk.Button(actions_frame, text=get_text('use_item'), command=self.use_item)
         self.use_button.pack(fill=tk.X, pady=5)
         self.progress_bar = ttk.Progressbar(actions_frame, orient='horizontal', mode='determinate', length=120)
         self.progress_bar.pack(fill=tk.X, pady=(10, 5))
@@ -248,15 +210,24 @@ class RpgGui(ttk.Frame):
 
 
         # Minigame Canvas
-        minigame_frame = ttk.LabelFrame(actions_frame, text="Ressourcenjagd", padding="5")
+        minigame_frame = ttk.LabelFrame(actions_frame, text=get_text('resource_hunt'), padding="5")
         minigame_frame.pack(fill=tk.X, pady=(10, 0), expand=True)
-        self.minigame_canvas = tk.Canvas(minigame_frame, width=120, height=150, bg="grey", relief="sunken", borderwidth=1)
+        self.minigame_canvas = tk.Canvas(minigame_frame, width=240, height=300, relief="sunken", borderwidth=1)
         self.minigame_canvas.pack(expand=True, fill=tk.BOTH)
+        self.minigame_canvas.bind("<Configure>", self._resize_minigame_background)
+
+        try:
+            # Load the original background image. It will be resized and drawn by the event handler.
+            # Store the original PIL image to use for resizing later.
+            self.minigame_bg_img_original_pil = Image.open("assets/minigame_background.png")
+        except FileNotFoundError:
+            self.minigame_bg_img_original_pil = None
+            self.minigame_canvas.config(bg="grey") # Fallback color
 
 
     def _create_log_frame(self, parent):
         """Creates the quest log text widget."""
-        log_labelframe = ttk.LabelFrame(parent, text="Log", padding="10")
+        log_labelframe = ttk.LabelFrame(parent, text=get_text('log'), padding="10")
         log_labelframe.pack(fill=tk.X, expand=True)
 
         log_labelframe.rowconfigure(0, weight=1)
@@ -269,18 +240,28 @@ class RpgGui(ttk.Frame):
         scrollbar.grid(row=0, column=1, sticky="ns")
         self.quest_log.config(state=tk.DISABLED)
 
+    def _resize_minigame_background(self, event):
+        """Resizes and redraws the minigame background image to fit the canvas."""
+        if self.minigame_bg_img_original_pil:
+            # Resize the original image to the new canvas size
+            resized_pil = self.minigame_bg_img_original_pil.resize((event.width, event.height))
+            # Convert to PhotoImage. Important: keep a reference!
+            self.minigame_bg_img = ImageTk.PhotoImage(resized_pil)
+            # Redraw the image on the canvas
+            self.minigame_canvas.create_image(0, 0, image=self.minigame_bg_img, anchor='nw')
+
     def _create_equipment_frame(self, parent):
         parent.columnconfigure(1, weight=1)
-        equip_frame = ttk.LabelFrame(parent, text="Angelegte Ausrüstung", padding="10")
+        equip_frame = ttk.LabelFrame(parent, text=get_text('equipped_gear_title'), padding="10")
         equip_frame.pack(fill=tk.X, padx=10, pady=10)
-        for i, (slot, var) in enumerate(self.equipment_vars.items()):
-            ttk.Label(equip_frame, text=f"{slot}:").grid(row=i, column=0, sticky="w")
+        for i, (slot_key, var) in enumerate(self.equipment_vars.items()):
+            ttk.Label(equip_frame, text=f"{get_text(slot_key.lower())}:").grid(row=i, column=0, sticky="w")
             ttk.Label(equip_frame, textvariable=var).grid(row=i, column=1, sticky="w", padx=5)
 
     def _create_inventory_frame(self, parent):
         parent.rowconfigure(0, weight=1)
         parent.columnconfigure(0, weight=1)
-        self.inv_frame = ttk.LabelFrame(parent, text="Rucksack", padding="10")
+        self.inv_frame = ttk.LabelFrame(parent, text=get_text('backpack_title'), padding="10")
         self.inv_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         self.inv_frame.rowconfigure(0, weight=1)
         self.inv_frame.columnconfigure(0, weight=1)
@@ -304,28 +285,28 @@ class RpgGui(ttk.Frame):
 
             # Format the text
             text = f"{item.name}\n"
-            text += f"Typ: {item.item_type} ({item.slot})\n"
-            text += f"Wert: {format_currency(item.value)}\n\n"
-            for stat, value in item.stats_boost.items():
-                text += f"{stat}: +{value}\n"
+            text += f"{get_text('tooltip_type')}: {item.item_type} ({item.slot})\n"
+            text += f"{get_text('tooltip_value')}: {format_currency(item.value)}\n\n"
+            for stat_key, value in item.stats_boost.items():
+                text += f"{get_text(stat_key.lower())}: +{value}\n"
             return text.strip()
         except (IndexError, tk.TclError):
             return ""
 
     def update_display(self):
-        self.char_name_var.set(f"{self.player.name} ({self.player.klasse})")
+        self.char_name_var.set(f"{self.player.name} ({get_text(self.player.klasse.lower())})")
         self.char_level_var.set(self.player.level)
         self.char_gold_var.set(format_currency(self.player.copper))
         total_stats = self.player.get_total_stats()
-        for stat, var in self.stats_vars.items():
-            base = self.player.attributes.get(stat, 0)
-            total = total_stats.get(stat, 0)
+        for stat_key, var in self.stats_vars.items():
+            base = self.player.attributes.get(stat_key, 0)
+            total = total_stats.get(stat_key, 0)
             bonus = total - base
             var.set(f"{total} ({base} {'+' if bonus >= 0 else ''}{bonus})") if bonus != 0 else var.set(total)
         for slot, var in self.equipment_vars.items():
             item = self.player.equipment.get(slot)
-            var.set(item.name if item else "Leer")
-        self.inv_frame.config(text=f"Inventar ({len(self.player.inventory)}/{self.player.max_inventory_size})")
+            var.set(item.name if item else get_text('empty_slot'))
+        self.inv_frame.config(text=f"{get_text('inventory_tab')} ({len(self.player.inventory)}/{self.player.max_inventory_size})")
         self.inventory_listbox.delete(0, tk.END)
         for i, item in enumerate(self.player.inventory):
             item_text = str(item)
@@ -347,11 +328,11 @@ class RpgGui(ttk.Frame):
         self.wut_frame.grid_remove()
 
         if self.player.klasse == "Schurke":
-            self.energie_label_var.set(f"{self.player.current_energie} / {self.player.max_energie} Energie")
+            self.energie_label_var.set(f"{self.player.current_energie} / {self.player.max_energie} {get_text('energy')}")
             self.energie_bar['value'] = (self.player.current_energie / self.player.max_energie) * 100 if self.player.max_energie > 0 else 0
             self.energie_frame.grid(row=6, column=0, columnspan=2, sticky="ew", pady=(5, 0))
         elif self.player.klasse == "Krieger":
-            self.wut_label_var.set(f"{self.player.current_wut} / {self.player.max_wut} Wut")
+            self.wut_label_var.set(f"{self.player.current_wut} / {self.player.max_wut} {get_text('rage')}")
             self.wut_bar['value'] = (self.player.current_wut / self.player.max_wut) * 100 if self.player.max_wut > 0 else 0
             self.wut_frame.grid(row=6, column=0, columnspan=2, sticky="ew", pady=(5, 0))
         else: # Default to Mana for Magier and any other future classes
@@ -364,7 +345,7 @@ class RpgGui(ttk.Frame):
 
         # Update resources display
         if not self.player.resources:
-            self.resources_label.config(text="Noch keine Ressourcen gesammelt.")
+            self.resources_label.config(text=get_text('no_resources_collected'))
         else:
             resources_text = "\n".join([f"{name}: {amount}" for name, amount in self.player.resources.items()])
             self.resources_label.config(text=resources_text)
@@ -378,10 +359,10 @@ class RpgGui(ttk.Frame):
         self.quest_log.delete("1.0", tk.END)
         self.quest_log.config(state=tk.DISABLED)
 
-    def show_paused_messagebox(self, title, message, **kwargs):
-        """Shows a messagebox while pausing the quest loop."""
+    def show_paused_messagebox(self, title_key, message_key, **kwargs):
+        """Shows a messagebox while pausing the quest loop, using translated text."""
         self.pause_quest_loop()
-        messagebox.showinfo(title, message, **kwargs)
+        messagebox.showinfo(get_text(title_key), get_text(message_key), **kwargs)
         self.resume_quest_loop()
 
     def add_to_log(self, message):
@@ -399,28 +380,27 @@ class RpgGui(ttk.Frame):
     def toggle_auto_quest(self):
         self.is_auto_questing = not self.is_auto_questing
         if self.is_auto_questing:
-            self.auto_quest_button.config(text="Auto-Quest stoppen")
-            self.set_loot_text("Auto-Quest Modus aktiv...")
+            self.auto_quest_button.config(text=get_text('stop_auto_quest'))
+            self.set_loot_text(get_text('auto_quest_mode_active'))
             self.start_quest()
         else:
-            self.auto_quest_button.config(text="Auto-Quest starten")
-            self.set_loot_text("Auto-Quest Modus gestoppt.")
+            self.auto_quest_button.config(text=get_text('start_auto_quest'))
+            self.set_loot_text(get_text('auto_quest_mode_stopped'))
 
     def start_quest(self):
         if self.current_quest:
             if not self.is_auto_questing:
-                messagebox.showwarning("Quest aktiv", "Bitte schließe erst die aktuelle Quest ab.")
+                messagebox.showwarning(get_text('quest_active_warning'), get_text('quest_active_message'))
             return
         if len(self.player.inventory) >= self.player.max_inventory_size:
-            self.set_loot_text("Inventar voll! Auto-Quest gestoppt.")
-            # Use the paused messagebox
-            self.show_paused_messagebox("Inventar voll", "Dein Inventar ist voll. Besuche den Händler!")
+            self.set_loot_text(get_text('auto_quest_stopped_inventory'))
+            self.show_paused_messagebox('inventory_full_title', 'inventory_full_message')
             if self.is_auto_questing:
                 self.toggle_auto_quest()
             return
 
         selected_quest = random.choice(AVAILABLE_QUESTS)
-        quest_name = selected_quest["name"]
+        quest_name_key = selected_quest["name_key"]
         quest_image_path = selected_quest["image"]
 
         try:
@@ -430,11 +410,10 @@ class RpgGui(ttk.Frame):
             self.quest_image_label.config(image=photo_img)
             self.quest_image_label.image = photo_img
         except Exception as e:
-            self.quest_image_label.config(image=None, text=f"Bildfehler:\n{e}")
+            self.quest_image_label.config(image=None, text=get_text('image_error_short').format(e=e))
             self.quest_image_label.image = None
 
-        self.current_quest = Quest(quest_name)
-        # Clear log for the new quest and show the first phase text
+        self.current_quest = Quest(quest_name_key) # Pass the key
         self.clear_log()
         self.add_to_log(self.current_quest.travel_text)
         self.progress_bar['value'] = 0
@@ -519,23 +498,28 @@ class RpgGui(ttk.Frame):
         if self.player.current_lp / self.player.max_lp < 0.1:
             if self.is_auto_questing:
                 self.toggle_auto_quest()
-                messagebox.showwarning("Niedrige Lebenspunkte!", "Deine Lebenspunkte sind kritisch niedrig! Auto-Quest pausiert. Heile dich!")
+                messagebox.showwarning(get_text('low_health_warning_title'), get_text('low_health_warning_message'))
         if self.current_quest.is_complete():
             gold, xp, item = self.current_quest.generate_reward(self.player)
             item_added = self.player.add_loot(gold, item)
             level_up_info = self.player.add_xp(xp)
-            loot_message = f"Loot: {format_currency(gold)}, {xp} XP"
+
+            loot_message = get_text('loot_message').format(gold=format_currency(gold), xp=xp)
             if item:
-                loot_message += f" und '{item.name}'" if item_added else f" (aber '{item.name}' passte nicht ins Inventar!)"
+                if item_added:
+                    loot_message += get_text('loot_with_item').format(item_name=item.name)
+                else:
+                    loot_message += get_text('loot_inventory_full').format(item_name=item.name)
             self.set_loot_text(loot_message)
+
             if level_up_info:
                 self.pause_quest_loop()
-                level_up_summary = f"Level Up! Du bist jetzt Level {self.player.level}!\n\nAttribut-Boni:\n" + "\n".join(level_up_info)
-                CountdownDialog(self, title="Level Aufstieg!", message=level_up_summary, on_close_callback=self.resume_quest_loop)
+                level_up_summary = get_text('level_up_message').format(level=self.player.level, bonuses="\n".join(level_up_info))
+                CountdownDialog(self, title=get_text('level_up_title'), message=level_up_summary, on_close_callback=self.resume_quest_loop)
+
             self.current_quest = None
             self.progress_bar['value'] = 0
 
-            # Bild nach Quest-Abschluss auf Platzhalter zurücksetzen
             self.quest_image_label.config(image=self.placeholder_image)
             self.quest_image_label.image = self.placeholder_image
 
@@ -571,7 +555,8 @@ class RpgGui(ttk.Frame):
         item_index = selected_indices[0]
         success, message = self.player.use_item(item_index)
         if not success:
-            messagebox.showwarning("Fehler", message)
+            # The message from use_item will need to be a key
+            messagebox.showwarning(get_text('error_title'), get_text(message))
         self.update_display()
 
     def on_item_double_click(self, event=None):
@@ -594,6 +579,7 @@ class RpgGui(ttk.Frame):
         self.quest_button.config(state=tk.DISABLED if is_questing else tk.NORMAL)
         self.trader_button.config(state=tk.DISABLED if is_questing else tk.NORMAL)
         self.blacksmith_button.config(state=tk.DISABLED if is_questing else tk.NORMAL)
+        self.boss_arena_button.config(state=tk.DISABLED if is_questing else tk.NORMAL)
         self.auto_quest_button.config(state=tk.DISABLED if is_questing and not self.is_auto_questing else tk.NORMAL)
         if not selected_indices:
             self.equip_button.config(state=tk.DISABLED)
@@ -626,6 +612,16 @@ class RpgGui(ttk.Frame):
     def on_blacksmith_close(self):
         self.update_display()
         self.blacksmith_button.config(state=tk.NORMAL)
+
+    def open_boss_arena_window(self):
+        self.pause_quest_loop()
+        self.boss_arena_button.config(state=tk.DISABLED)
+        BossArenaWindow(self, self.player, on_close_callback=self.on_boss_arena_close)
+
+    def on_boss_arena_close(self):
+        self.update_display()
+        self.boss_arena_button.config(state=tk.NORMAL)
+        self.resume_quest_loop()
 
     def handle_game_over(self):
         self.game_over = True

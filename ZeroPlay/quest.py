@@ -10,6 +10,7 @@ from game_data import (
     CLASSES, WARRIOR_EVENTS, MAGE_EVENTS, ROGUE_EVENTS,
     QUEST_LOCATIONS, QUEST_ACTIONS_PREFIX, QUEST_RETURNS
 )
+from localization import get_text
 
 class Quest:
     """Represents a quest that automatically progresses and grants rewards."""
@@ -98,13 +99,13 @@ class Quest:
 
     def generate_phase_texts(self):
         """Generates and stores the descriptive text for each quest phase."""
-        location = random.choice(QUEST_LOCATIONS)
-        action_prefix = random.choice(QUEST_ACTIONS_PREFIX)
-        return_prefix = random.choice(QUEST_RETURNS)
+        location_key = random.choice(QUEST_LOCATIONS)
+        action_prefix_key = random.choice(QUEST_ACTIONS_PREFIX)
+        return_prefix_key = random.choice(QUEST_RETURNS)
 
-        self.travel_text = f"Deine Quest führt dich {location}."
-        self.action_text = f"{action_prefix} {self.description}."
-        self.return_text = return_prefix
+        self.travel_text = get_text('quest_travel').format(location=get_text(location_key))
+        self.action_text = f"{get_text(action_prefix_key)} {get_text(self.description)}."
+        self.return_text = get_text(return_prefix_key)
 
     def generate_reward(self, character):
         """
